@@ -76,7 +76,7 @@ src/
 
 ## 🌐 Deployment
 
-This app is deployed in Vercel under the link: [CineVerse on Vercel](https://cineverse.vercel.app/)
+This app is deployed in Vercel under the link: [CineVerse on Vercel](https://cineverse-ruddy-three.vercel.app/)
 
 ---
 
