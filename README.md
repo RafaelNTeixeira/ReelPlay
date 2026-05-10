@@ -40,7 +40,7 @@ This app is deployed in Vercel under the link: [CineVerse on Vercel](https://cin
 
 ### 🗂 Review Management
 - Filter by **Films** or **TV Series**, sort by **Latest**, **Highest Rated**, or **A–Z**.
-- Reviews persist in `localStorage` - no backend required.
+- Reviews are persisted in `Supabase`.
 - **Critic's Pick** badge automatically awarded to titles rated 4.5★ or above.
 - Stats bar shows total reviews, film/series count, recommendations, and average rating.
 
@@ -61,28 +61,28 @@ This app is deployed in Vercel under the link: [CineVerse on Vercel](https://cin
 ```
 src/
 ├── components/
-│   ├── CastCarousel.jsx     # Horizontal scrollable cast list
-│   ├── FilmGrain.jsx        # Animated canvas film grain overlay
-│   ├── HeroBanner.jsx       # Auto-playing YouTube trailer hero
-│   ├── MovieCard.jsx        # Review card for the grid
-│   ├── Navbar.jsx           # Navigation + search trigger
-│   ├── ReviewForm.jsx       # Admin-only review editor
-│   ├── SearchModal.jsx      # TMDB search overlay
-│   ├── StarRating.jsx       # Interactive & read-only star rating
-│   └── TheaterMode.jsx      # Fullscreen theater overlay
+│   ├── CastCarousel.jsx        # Scrollable cast list
+│   ├── FilmGrain.jsx           # Grain (cinema) / scanlines (games)
+│   ├── HeroBanner.jsx          # Auto-playing YouTube hero
+│   ├── MovieCard.jsx           # Cinema card + Game card (two designs)
+│   ├── Navbar.jsx              # Context-aware, dual-accent nav
+│   ├── ReviewForm.jsx          # Admin review editor
+│   ├── ScreenshotCarousel.jsx  # Game screenshot lightbox
+│   ├── SearchModal.jsx         # TMDB + RAWG tabbed search
+│   ├── StarRating.jsx          # Half-star interactive rating
+│   └── TheaterMode.jsx         # Full-screen trailer overlay
 ├── context/
-│   ├── AdminContext.jsx     # Admin auth state
-│   └── ThemeContext.jsx     # Dynamic ColorThief palette
+│   ├── AdminContext.jsx        # Auth state
+│   └── ThemeContext.jsx        # ColorThief dynamic palette
 ├── pages/
-│   ├── AdminLogin.jsx       # Password gate
-│   ├── Home.jsx             # Review grid + featured hero
-│   └── MovieDetail.jsx      # Full detail + trailer + review page
-├── utils/
-│   ├── storage.js           # localStorage CRUD for reviews
-│   └── tmdb.js              # TMDB API wrapper functions
-├── config.js                # API keys, image URL helpers
-├── App.jsx                  # Routing setup
-└── index.css                # Global styles & CSS variables
+│   ├── AdminLogin.jsx
+│   ├── GameDetail.jsx          # Full game page
+│   ├── Home.jsx                # Split cinema/games grid
+│   └── MovieDetail.jsx         # Film & TV detail page
+└── utils/
+    ├── rawg.js                 # RAWG API wrapper
+    ├── storage.js              # Supabase + localStorage
+    └── tmdb.js                 # TMDB API wrapper
 ```
 
 ---
