@@ -16,6 +16,13 @@ This app is deployed in Vercel under the link: [CineVerse on Vercel](https://cin
 - **Netflix-Style Hero Banner** - Every movie/show detail page opens with an auto-playing, muted YouTube trailer filling the entire header. A prominent **Unmute** button and volume slider let you dive in immediately.
 - **Theater Mode** - A dedicated "Watch Trailer" button dims the entire page to 90% black and centers the player for a distraction-free experience. Press `ESC` or click outside to exit.
 
+### 🎮 Video Game Reviews
+- **RAWG-powered** - game data, cover art, Metacritic scores, platforms, developers
+- **Screenshot lightbox** - full-screen gallery with previous/next navigation
+- **Trailer support** - YouTube IDs and direct MP4 clips both handled
+- **Platform badges** - PS5, Xbox Series, PC, Switch and more displayed on cards and detail pages
+- **Scanline overlay** - game cards and game routes use a CRT scanline texture instead of film grain
+
 ### 🎨 Adaptive UI/UX
 - **Dynamic Color Palettes** - Uses [ColorThief](https://lokeshdhakar.com/projects/color-thief/) to extract the dominant colors from the official movie poster, then dynamically updates accent colors, button highlights, and background gradients to perfectly match the film being viewed.
 - **Film Grain Overlay** - A canvas-based animated film grain texture rendered over the entire page for an authentic cinematic feel.
