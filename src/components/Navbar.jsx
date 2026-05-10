@@ -67,6 +67,7 @@ export default function Navbar() {
             { label: 'All Reviews', path: '/' },
             { label: 'Movies', path: '/?type=movie' },
             { label: 'TV Shows', path: '/?type=tv' },
+            { label: 'Games', path: '/?type=game' },
           ].map(({ label, path }) => (
             <Link
               key={label}
@@ -184,7 +185,8 @@ export default function Navbar() {
         onClose={() => setSearchOpen(false)}
         onSelect={(item) => {
           setSearchOpen(false);
-          navigate(`/${item.media_type === 'tv' ? 'tv' : 'movie'}/${item.id}`);
+          if (item.media_type === 'game') navigate(`/game/${item.id}`);
+          else navigate(`/${item.media_type === 'tv' ? 'tv' : 'movie'}/${item.id}`);
         }}
         adminMode={isAdmin}
       />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { saveReview } from '../utils/storage';
 import StarRating from './StarRating';
 
-export default function ReviewForm({ movie, mediaType, existingReview, onSave, onCancel }) {
+export default function ReviewForm({ movie, mediaType, existingReview, onSave, onCancel, overridePosterUrl, overrideBackdropUrl }) {
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [reviewTitle, setReviewTitle] = useState(existingReview?.reviewTitle || '');
   const [reviewText, setReviewText] = useState(existingReview?.reviewText || '');
@@ -27,8 +27,8 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         tmdbId: movie.id,
         mediaType,
         title: movie.title || movie.name,
-        posterPath: movie.poster_path,
-        backdropPath: movie.backdrop_path,
+        posterPath: overridePosterUrl || movie.poster_path,
+        backdropPath: overrideBackdropUrl || movie.backdrop_path,
         rating,
         reviewTitle,
         reviewText,

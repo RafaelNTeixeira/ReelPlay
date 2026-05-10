@@ -55,7 +55,7 @@ export default function MovieDetail({ mediaType }) {
         if (cancelled) return;
         setDetails(data);
         setTrailer(extractTrailer(data.videos));
-        setReview(getReview(Number(id), mediaType));
+        setReview(await getReview(Number(id), mediaType));
       } catch (err) {
         if (!cancelled) setError('Could not load this title. Check your TMDB API key.');
       } finally {
@@ -79,9 +79,7 @@ export default function MovieDetail({ mediaType }) {
     setShowReviewForm(false);
   }, []);
 
-  const handleDelete = () => {
-    if (!confirmDelete) { setConfirmDelete(true); return; }
-    deleteReview(Number(id), mediaType);
+  const handleDelete = async () => {
     setReview(null);
     setConfirmDelete(false);
   };

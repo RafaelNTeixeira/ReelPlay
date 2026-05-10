@@ -4,7 +4,14 @@ import StarRating from './StarRating';
 
 export default function MovieCard({ review, index = 0 }) {
   const navigate = useNavigate();
+  const isGame = review.mediaType === 'game';
+  const isFullUrl = review.posterPath?.startsWith('http');
   const href = `/${review.mediaType}/${review.tmdbId}`;
+  const imgSrc = isFullUrl ? review.posterPath : (review.posterPath ? posterUrl(review.posterPath, 'md') : null);
+
+  const badgeLabel = isGame ? '🎮 GAME' : review.mediaType === 'tv' ? '⬛ SERIES' : '▶ FILM';
+  const badgeColor = isGame ? '#a78bfa' : review.mediaType === 'tv' ? '#78b4c8' : 'var(--color-accent)';
+  const badgeBg = isGame ? 'rgba(167,139,250,0.15)' : review.mediaType === 'tv' ? 'rgba(120,180,200,0.12)' : 'var(--color-accent-dim)';
 
   const ratingColor = review.rating >= 4
     ? 'var(--color-accent)'
@@ -26,9 +33,9 @@ export default function MovieCard({ review, index = 0 }) {
     >
       {/* Poster */}
       <div style={{ position: 'relative', aspectRatio: '2/3', overflow: 'hidden' }}>
-        {review.posterPath ? (
+        {imgSrc ? (
           <img
-            src={posterUrl(review.posterPath, 'md')}
+            src={imgSrc}
             alt={review.title}
             style={{
               width: '100%',
@@ -97,13 +104,13 @@ export default function MovieCard({ review, index = 0 }) {
         }}>
           <span className="badge" style={{
             background: 'rgba(7,7,15,0.85)',
-            color: review.mediaType === 'tv' ? '#78b4c8' : 'var(--color-accent)',
-            border: `1px solid ${review.mediaType === 'tv' ? 'rgba(120,180,200,0.3)' : 'var(--color-accent-dim)'}`,
+            color: badgeColor,
+            border: `1px solid ${badgeBg}`,
             fontSize: '0.65rem',
             letterSpacing: '0.15em',
             backdropFilter: 'blur(8px)',
           }}>
-            {review.mediaType === 'tv' ? '⬛ SERIES' : '▶ FILM'}
+            {badgeLabel}
           </span>
         </div>
 
