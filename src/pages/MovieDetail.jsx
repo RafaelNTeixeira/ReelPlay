@@ -493,7 +493,7 @@ function ReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readingTim
             }}>
               ✦ CRITIC'S REVIEW
             </span>
-            {review.rating >= 4.5 && (
+            {review.reviewerPick && (
               <span style={{
                 background: 'var(--color-accent)',
                 color: '#07070f',
@@ -503,7 +503,7 @@ function ReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readingTim
                 padding: '0.15rem 0.4rem',
                 borderRadius: '2px',
               }}>
-                CRITIC'S PICK
+                ★ REVIEWER'S PICK
               </span>
             )}
           </div>

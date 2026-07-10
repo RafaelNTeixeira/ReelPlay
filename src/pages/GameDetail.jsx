@@ -677,9 +677,9 @@ function GameReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readin
             <span style={{ fontFamily: 'var(--font-label)', fontSize: '0.65rem', letterSpacing: '0.2em', color: 'var(--color-accent)' }}>
               🎮 GAME REVIEW
             </span>
-            {review.rating >= 4.5 && (
+            {review.reviewerPick && (
               <span style={{ background: 'var(--color-accent)', color: '#07070f', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', padding: '0.15rem 0.4rem', borderRadius: '2px' }}>
-                CRITIC'S PICK
+                ★ REVIEWER'S PICK
               </span>
             )}
           </div>
@@ -799,4 +799,3 @@ function ErrorState({ message, onBack }) {
     </div>
   );
 }
-

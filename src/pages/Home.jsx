@@ -7,7 +7,7 @@ import StarRating from '../components/StarRating';
 
 export default function Home() {
   const [reviews, setReviews] = useState([]);
-  const [stats, setStats] = useState({ total: 0, movies: 0, tv: 0, games: 0, recommended: 0, avgRating: null });
+  const [stats, setStats] = useState({ total: 0, movies: 0, tv: 0, games: 0, recommended: 0, picks: 0, avgRating: null });
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.get('type') || 'all';
@@ -31,6 +31,7 @@ export default function Home() {
       if (filter === 'movie') return r.mediaType === 'movie';
       if (filter === 'tv')    return r.mediaType === 'tv';
       if (filter === 'game')  return r.mediaType === 'game';
+      if (filter === 'pick')  return r.reviewerPick === true;
       return true;
     })
     .sort((a, b) => {
@@ -42,7 +43,7 @@ export default function Home() {
   // Separate for "all" view with section headers
   const cinemaReviews = filtered.filter((r) => r.mediaType !== 'game');
   const gameReviews   = filtered.filter((r) => r.mediaType === 'game');
-  const showSections  = filter === 'all' && cinemaReviews.length > 0 && gameReviews.length > 0;
+  const showSections  = (filter === 'all' || filter === 'pick') && cinemaReviews.length > 0 && gameReviews.length > 0;
 
   return (
     <div style={{ paddingTop: 'var(--navbar-height)' }}>
@@ -66,6 +67,7 @@ export default function Home() {
                 { label: 'Series',      value: stats.tv,          accent: '#78b4c8' },
                 { label: 'Games',       value: stats.games,       accent: 'var(--color-game)' },
                 { label: 'Recommended', value: stats.recommended, accent: '#6bc87a' },
+                { label: "Reviewer's Picks", value: stats.picks, accent: '#e2a84b' },
                 ...(stats.avgRating ? [{ label: 'Avg Rating', value: `${stats.avgRating} ★`, accent: 'var(--color-text-primary)' }] : []),
               ].map(({ label, value, accent }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
@@ -89,6 +91,7 @@ export default function Home() {
               { label: '▶ Films',  value: 'movie', color: 'var(--color-cinema)' },
               { label: '⬛ Series', value: 'tv',    color: '#78b4c8' },
               { label: '🎮 Games', value: 'game',  color: 'var(--color-game)' },
+              { label: '⭐ Picks',  value: 'pick',  color: '#e2a84b' },
             ].map(({ label, value, color }) => {
               const active = filter === value;
               return (
@@ -158,7 +161,7 @@ export default function Home() {
           /* Single-type filtered view */
           <div style={{
             display: 'grid',
-            gridTemplateColumns: filter === 'game'
+            gridTemplateColumns: (filter === 'game' || (filter === 'pick' && gameReviews.length > 0 && cinemaReviews.length === 0))
               ? 'repeat(auto-fill, minmax(240px, 1fr))'
               : 'repeat(auto-fill, minmax(195px, 1fr))',
             gap: '1.5rem',

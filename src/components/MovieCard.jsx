@@ -62,9 +62,9 @@ function CinemaCard({ review, imgSrc, isTv, index, navigate }) {
           </span>
         </div>
 
-        {review.rating >= 4.5 && (
+        {review.reviewerPick && (
           <div style={{ position: 'absolute', top: '0.65rem', right: '0.65rem', background: 'var(--color-cinema)', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            ★ PICK
+            ★ Reviewer's Pick
           </div>
         )}
         {review.recommended && (
@@ -130,9 +130,9 @@ function GameCard({ review, imgSrc, index, navigate }) {
         </div>
 
         {/* Critic pick */}
-        {review.rating >= 4.5 && (
+        {review.reviewerPick && (
           <div style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', zIndex: 4, background: 'var(--color-game)', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', fontFamily: 'var(--font-game)', textTransform: 'uppercase' }}>
-            ★ PICK
+            ★ Reviewer's Pick
           </div>
         )}
 

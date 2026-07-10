@@ -24,6 +24,7 @@ const fromDb = (row) => ({
   watchedDate: row.watched_date,
   recommended: row.recommended,
   containsSpoilers: row.contains_spoilers,
+  reviewerPick: row.reviewer_pick ?? false,
   year: row.year,
   genres: row.genres || [],
   tmdbRating: row.tmdb_rating,
@@ -46,6 +47,7 @@ const toDb = (r) => ({
   watched_date: r.watchedDate,
   recommended: r.recommended,
   contains_spoilers: r.containsSpoilers,
+  reviewer_pick: r.reviewerPick ?? false,
   year: r.year,
   genres: r.genres,
   tmdb_rating: r.tmdbRating,
@@ -167,6 +169,7 @@ export const getStats = async () => {
     tv: reviews.filter((r) => r.mediaType === 'tv').length,
     games: reviews.filter((r) => r.mediaType === 'game').length,
     recommended: reviews.filter((r) => r.recommended).length,
+    picks: reviews.filter((r) => r.reviewerPick).length,
     avgRating: avg,
   };
 };

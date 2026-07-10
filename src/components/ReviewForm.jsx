@@ -11,6 +11,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
   );
   const [recommended, setRecommended] = useState(existingReview?.recommended ?? true);
   const [spoilers, setSpoilers] = useState(existingReview?.containsSpoilers ?? false);
+  const [reviewerPick, setReviewerPick] = useState(existingReview?.reviewerPick ?? false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -37,6 +38,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         watchedDate,
         recommended,
         containsSpoilers: spoilers,
+        reviewerPick,
         year: (movie.release_date || movie.first_air_date || '').slice(0, 4),
         genres: movie.genres?.map((g) => g.name) || [],
         tmdbRating: movie.vote_average,
@@ -176,6 +178,12 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
                 onChange={setSpoilers}
                 label="⚠️ Contains Spoilers"
                 description="Warn readers before reading?"
+              />
+              <ToggleOption
+                checked={reviewerPick}
+                onChange={setReviewerPick}
+                label="⭐ Reviewer's Pick"
+                description="Feature this as an all-time favorite"
               />
             </div>
           </div>
