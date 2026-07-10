@@ -80,8 +80,18 @@ export default function MovieDetail({ mediaType }) {
   }, []);
 
   const handleDelete = async () => {
-    setReview(null);
-    setConfirmDelete(false);
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    try {
+      await deleteReview(Number(id), mediaType);
+      setReview(null);
+      setConfirmDelete(false);
+    } catch (err) {
+      alert(err.message || 'Failed to delete review.');
+      setConfirmDelete(false);
+    }
   };
 
   const handleShare = () => {

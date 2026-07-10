@@ -115,10 +115,16 @@ export const saveReview = async (reviewData) => {
       .select()
       .single();
 
-    if (!error && data) return fromDb(data);
+    if (error) {
+      console.error('Supabase saveReview failed:', error);
+      throw new Error(
+        `Could not save to Supabase (${error.message}). This is usually a Row Level Security policy blocking writes. Nothing was saved — your review was NOT silently stored elsewhere.`
+      );
+    }
+    return fromDb(data);
   }
 
-  // LocalStorage fallback
+  // LocalStorage fallback — only used when Supabase isn't configured at all
   const all = ls.all();
   const idx = all.findIndex((r) => r.id === id);
   const review = {
@@ -135,11 +141,15 @@ export const saveReview = async (reviewData) => {
 export const deleteReview = async (tmdbId, mediaType) => {
   const client = db();
   if (client) {
-    await client
+    const { error } = await client
       .from('reviews')
       .delete()
       .eq('tmdb_id', tmdbId)
       .eq('media_type', mediaType);
+    if (error) {
+      console.error('Supabase deleteReview failed:', error);
+      throw new Error(`Could not delete from Supabase (${error.message}).`);
+    }
     return;
   }
   ls.set(ls.all().filter((r) => !(r.tmdbId === tmdbId && r.mediaType === mediaType)));

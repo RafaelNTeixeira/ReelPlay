@@ -93,8 +93,18 @@ export default function GameDetail() {
   }, []);
 
   const handleDelete = async () => {
-    setReview(null);
-    setConfirmDelete(false);
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    try {
+      await deleteReview(Number(id), 'game');
+      setReview(null);
+      setConfirmDelete(false);
+    } catch (err) {
+      alert(err.message || 'Failed to delete review.');
+      setConfirmDelete(false);
+    }
   };
 
   const handleShare = () => {
@@ -358,7 +368,6 @@ export default function GameDetail() {
                   src={game.background_image}
                   alt={game.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  crossOrigin="anonymous"
                 />
               ) : (
                 <div className="poster-placeholder" style={{ height: '100%', fontSize: '4rem' }}>🎮</div>
@@ -790,3 +799,4 @@ function ErrorState({ message, onBack }) {
     </div>
   );
 }
+

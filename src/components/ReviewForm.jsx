@@ -12,6 +12,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
   const [recommended, setRecommended] = useState(existingReview?.recommended ?? true);
   const [spoilers, setSpoilers] = useState(existingReview?.containsSpoilers ?? false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length;
   const readingTime = Math.ceil(wordCount / 200);
@@ -22,8 +23,9 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
       return;
     }
     setSaving(true);
+    setSaveError(null);
     try {
-      const saved = saveReview({
+      const saved = await saveReview({
         tmdbId: movie.id,
         mediaType,
         title: movie.title || movie.name,
@@ -42,6 +44,9 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         director: movie.credits?.crew?.find((c) => c.job === 'Director')?.name || null,
       });
       onSave(saved);
+    } catch (err) {
+      console.error(err);
+      setSaveError(err.message || 'Something went wrong while saving.');
     } finally {
       setSaving(false);
     }
@@ -175,6 +180,20 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
             </div>
           </div>
         </div>
+
+        {/* Save error */}
+        {saveError && (
+          <div style={{
+            background: 'rgba(224,85,85,0.08)',
+            border: '1px solid rgba(224,85,85,0.35)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.85rem 1.1rem',
+            color: '#e05555',
+            fontSize: '0.85rem',
+          }}>
+            ⚠ {saveError}
+          </div>
+        )}
 
         {/* Actions */}
         <div style={{
