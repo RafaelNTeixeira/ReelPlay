@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import MovieDetail from './pages/MovieDetail';
 import GameDetail from './pages/GameDetail';
 import AdminLogin from './pages/AdminLogin';
+import Stats from './pages/Stats';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/movie/:id" element={<MovieDetail mediaType="movie" />} />
             <Route path="/tv/:id" element={<MovieDetail mediaType="tv" />} />
             <Route path="/game/:id" element={<GameDetail />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/admin" element={<AdminLogin />} />
           </Routes>
         </ThemeProvider>

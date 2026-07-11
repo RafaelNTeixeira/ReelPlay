@@ -9,7 +9,7 @@ import {
   getPlatformLabel,
   metacriticColor,
 } from '../utils/rawg';
-import { getReview, deleteReview } from '../utils/storage';
+import { getReview, deleteReview, logRewatch } from '../utils/storage';
 import { useAdmin } from '../context/AdminContext';
 import { useTheme } from '../context/ThemeContext';
 import StarRating from '../components/StarRating';
@@ -104,6 +104,15 @@ export default function GameDetail() {
     } catch (err) {
       alert(err.message || 'Failed to delete review.');
       setConfirmDelete(false);
+    }
+  };
+
+  const handleLogRewatch = async () => {
+    try {
+      const saved = await logRewatch(Number(id), 'game');
+      setReview(saved);
+    } catch (err) {
+      alert(err.message || 'Failed to log replay.');
     }
   };
 
@@ -521,6 +530,11 @@ export default function GameDetail() {
                   <button className="btn btn-outline" onClick={() => setShowReviewForm(true)}>
                     {review ? '✎ Edit Review' : '+ Write Review'}
                   </button>
+                  {review && review.rating > 0 && (
+                    <button className="btn btn-ghost" onClick={handleLogRewatch} title="Log another playthrough">
+                      🔁 Log Replay
+                    </button>
+                  )}
                   {review && (
                     <button
                       className={`btn ${confirmDelete ? 'btn-danger' : 'btn-ghost'}`}
@@ -696,6 +710,11 @@ function GameReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readin
           {review.watchedDate && (
             <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
               Played {new Date(review.watchedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </div>
+          )}
+          {review.rewatchCount > 0 && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--color-accent)', marginTop: '0.2rem' }}>
+              🔁 Played {review.rewatchCount + 1}× total
             </div>
           )}
           {wordCount > 0 && (

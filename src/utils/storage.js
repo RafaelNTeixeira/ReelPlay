@@ -26,6 +26,7 @@ const fromDb = (row) => ({
   containsSpoilers: row.contains_spoilers,
   reviewerPick: row.reviewer_pick ?? false,
   episodeRatings: row.episode_ratings || {},
+  rewatchCount: row.rewatch_count ?? 0,
   year: row.year,
   genres: row.genres || [],
   tmdbRating: row.tmdb_rating,
@@ -50,6 +51,7 @@ const toDb = (r) => ({
   contains_spoilers: r.containsSpoilers,
   reviewer_pick: r.reviewerPick ?? false,
   episode_ratings: r.episodeRatings ?? {},
+  rewatch_count: r.rewatchCount ?? 0,
   year: r.year,
   genres: r.genres,
   tmdb_rating: r.tmdbRating,
@@ -179,6 +181,19 @@ export const saveEpisodeRating = async (tmdbId, mediaType, seasonNumber, episode
     id,
     updatedAt: now,
     createdAt: existing?.createdAt || now,
+  };
+  return upsertRow(id, review);
+};
+
+// -- Quick rewatch logging (admin can +1 without opening the edit form) ---
+export const logRewatch = async (tmdbId, mediaType) => {
+  const id = `${tmdbId}-${mediaType}`;
+  const existing = await getReview(tmdbId, mediaType);
+  if (!existing) throw new Error('Write an overall review before logging a rewatch.');
+  const review = {
+    ...existing,
+    rewatchCount: (existing.rewatchCount || 0) + 1,
+    updatedAt: new Date().toISOString(),
   };
   return upsertRow(id, review);
 };

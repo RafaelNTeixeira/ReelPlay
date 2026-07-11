@@ -49,6 +49,19 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
     return { count, avg: count > 0 ? (sum / count).toFixed(1) : null };
   }, [episodeRatings]);
 
+  const seasonBestWorst = useMemo(() => {
+    const seasonRatings = episodeRatings?.[activeSeason] || {};
+    const entries = Object.entries(seasonRatings).map(([ep, r]) => [Number(ep), r]);
+    if (entries.length < 2) return { best: null, worst: null };
+    let best = entries[0], worst = entries[0];
+    for (const e of entries) {
+      if (e[1] > best[1]) best = e;
+      if (e[1] < worst[1]) worst = e;
+    }
+    if (best[1] === worst[1]) return { best: null, worst: null }; // all tied, nothing to highlight
+    return { best: best[0], worst: worst[0] };
+  }, [episodeRatings, activeSeason]);
+
   const handleRate = async (seasonNumber, episodeNumber, rating) => {
     const key = `${seasonNumber}-${episodeNumber}`;
     setSavingKey(key);
@@ -184,8 +197,18 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '0.15rem' }}>
-                      EP {ep.episode_number}{ep.air_date ? ` · ${new Date(ep.air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span>EP {ep.episode_number}{ep.air_date ? ` · ${new Date(ep.air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}</span>
+                      {seasonBestWorst.best === ep.episode_number && (
+                        <span style={{ background: 'rgba(107,200,122,0.15)', color: '#6bc87a', padding: '0.08rem 0.35rem', borderRadius: '2px', fontSize: '0.62rem', letterSpacing: '0.04em' }}>
+                          🏆 Best of Season
+                        </span>
+                      )}
+                      {seasonBestWorst.worst === ep.episode_number && (
+                        <span style={{ background: 'rgba(224,85,85,0.12)', color: '#e08585', padding: '0.08rem 0.35rem', borderRadius: '2px', fontSize: '0.62rem', letterSpacing: '0.04em' }}>
+                          📉 Weakest of Season
+                        </span>
+                      )}
                     </div>
                     <div style={{
                       fontFamily: 'var(--font-display)',

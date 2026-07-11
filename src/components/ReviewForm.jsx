@@ -12,6 +12,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
   const [recommended, setRecommended] = useState(existingReview?.recommended ?? true);
   const [spoilers, setSpoilers] = useState(existingReview?.containsSpoilers ?? false);
   const [reviewerPick, setReviewerPick] = useState(existingReview?.reviewerPick ?? false);
+  const [rewatchCount, setRewatchCount] = useState(existingReview?.rewatchCount ?? 0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -39,6 +40,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         recommended,
         containsSpoilers: spoilers,
         reviewerPick,
+        rewatchCount,
         year: (movie.release_date || movie.first_air_date || '').slice(0, 4),
         genres: movie.genres?.map((g) => g.name) || [],
         tmdbRating: movie.vote_average,
@@ -164,7 +166,39 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
             />
           </div>
 
-          <div className="form-group" style={{ justifyContent: 'flex-end' }}>
+          <div className="form-group">
+            <label className="form-label">🔁 Rewatches</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setRewatchCount((c) => Math.max(0, c - 1))}
+                disabled={rewatchCount === 0}
+                className="btn btn-ghost"
+                style={{ padding: '0.4rem 0.7rem', fontSize: '0.9rem', opacity: rewatchCount === 0 ? 0.4 : 1 }}
+              >
+                −
+              </button>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', minWidth: '1.5rem', textAlign: 'center' }}>
+                {rewatchCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setRewatchCount((c) => c + 1)}
+                className="btn btn-ghost"
+                style={{ padding: '0.4rem 0.7rem', fontSize: '0.9rem' }}
+              >
+                +
+              </button>
+              <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                {rewatchCount === 0 ? 'Watched once' : `Watched ${rewatchCount + 1}× total`}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Second row: flags */}
+        <div>
+          <div className="form-group">
             <label className="form-label">Flags</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               <ToggleOption

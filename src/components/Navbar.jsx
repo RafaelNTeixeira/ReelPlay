@@ -118,6 +118,22 @@ export default function Navbar() {
 
         {/* Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Link to="/stats" style={{
+            background: 'transparent',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-secondary)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.5rem 0.75rem',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            fontSize: '0.76rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+            cursor: 'pointer', transition: 'all 0.2s ease', textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.color = 'var(--color-accent)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            Stats
+          </Link>
           <button onClick={() => setSearchOpen(true)} style={{
             background: 'transparent',
             border: '1px solid var(--color-border)',

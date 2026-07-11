@@ -57,8 +57,9 @@ export default function Home() {
   const filtered = typeFiltered
     .filter((r) => !activeGenre || (r.genres || []).includes(activeGenre))
     .sort((a, b) => {
-      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
-      if (sortBy === 'title')  return a.title.localeCompare(b.title);
+      if (sortBy === 'rating')    return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === 'title')     return a.title.localeCompare(b.title);
+      if (sortBy === 'rewatched') return (b.rewatchCount || 0) - (a.rewatchCount || 0);
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
@@ -154,6 +155,7 @@ export default function Home() {
               <option value="latest">Latest</option>
               <option value="rating">Highest Rated</option>
               <option value="title">A–Z</option>
+              <option value="rewatched">Most Rewatched</option>
             </select>
           </div>
         </div>
