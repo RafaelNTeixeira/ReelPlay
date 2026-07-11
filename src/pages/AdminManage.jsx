@@ -58,15 +58,17 @@ export default function AdminManage() {
 
   const selectedReviews = reviews.filter((r) => selected.has(r.id));
 
-  const applyToggle = async (review, field) => {
+  const applyField = async (review, field, value) => {
     setError(null);
     try {
-      const updated = await updateReviewFlags(review.tmdbId, review.mediaType, { [field]: !review[field] });
+      const updated = await updateReviewFlags(review.tmdbId, review.mediaType, { [field]: value });
       setReviews((prev) => prev.map((r) => (r.id === review.id ? updated : r)));
     } catch (err) {
       setError(err.message);
     }
   };
+
+  const applyToggle = (review, field) => applyField(review, field, !review[field]);
 
   const bulkApply = async (field, value) => {
     setBusy(true);
@@ -114,7 +116,8 @@ export default function AdminManage() {
             Manage Reviews
           </h1>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.4rem' }}>
-            Select multiple titles to update Recommended or Reviewer's Pick in bulk.
+            Edit rating and rewatch count per title, or select multiple to update Recommended / Reviewer's Pick in bulk.
+            For TV series, this is the overall series rating only — episode ratings are managed on the series page itself.
           </p>
         </div>
 
@@ -237,7 +240,8 @@ export default function AdminManage() {
               <input type="checkbox" checked={filtered.length > 0 && filtered.every((r) => selected.has(r.id))} onChange={selectAllVisible} />
               <span style={{ width: '44px' }} />
               <span style={{ flex: 1 }}>Title</span>
-              <span style={{ width: '70px', textAlign: 'center' }}>Rating</span>
+              <span style={{ width: '78px', textAlign: 'center' }}>Rating</span>
+              <span style={{ width: '90px', textAlign: 'center' }}>Rewatches</span>
               <span style={{ width: '90px', textAlign: 'center' }}>Recommended</span>
               <span style={{ width: '110px', textAlign: 'center' }}>Reviewer's Pick</span>
               <span style={{ width: '50px' }} />
@@ -265,8 +269,11 @@ export default function AdminManage() {
                     </div>
                     <div style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)' }}>{typeLabel}{r.year ? ` · ${r.year}` : ''}</div>
                   </div>
-                  <span style={{ width: '70px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                    {r.rating > 0 ? `${r.rating}★` : '—'}
+                  <span style={{ width: '78px', textAlign: 'center' }}>
+                    <RatingCell review={r} onSave={(v) => applyField(r, 'rating', v)} />
+                  </span>
+                  <span style={{ width: '90px', textAlign: 'center' }}>
+                    <RewatchCell review={r} onSave={(v) => applyField(r, 'rewatchCount', v)} />
                   </span>
                   <div style={{ width: '90px', textAlign: 'center' }}>
                     <input type="checkbox" checked={!!r.recommended} onChange={() => applyToggle(r, 'recommended')} />
@@ -283,6 +290,68 @@ export default function AdminManage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function RatingCell({ review, onSave }) {
+  const [value, setValue] = useState(review.rating);
+
+  useEffect(() => { setValue(review.rating); }, [review.rating]);
+
+  const commit = () => {
+    let v = parseFloat(value);
+    if (isNaN(v)) v = 0;
+    v = Math.min(5, Math.max(0, Math.round(v * 2) / 2)); // clamp 0-5, snap to nearest 0.5
+    setValue(v);
+    if (v !== review.rating) onSave(v);
+  };
+
+  return (
+    <input
+      type="number"
+      min="0"
+      max="5"
+      step="0.5"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+      title={review.mediaType === 'tv' ? 'Overall series rating' : 'Rating'}
+      style={{
+        width: '56px',
+        textAlign: 'center',
+        background: 'var(--color-bg-elevated)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'var(--color-text-primary)',
+        fontSize: '0.82rem',
+        padding: '0.3rem',
+      }}
+    />
+  );
+}
+
+function RewatchCell({ review, onSave }) {
+  const count = review.rewatchCount || 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+      <button
+        onClick={() => onSave(Math.max(0, count - 1))}
+        disabled={count === 0}
+        className="btn btn-ghost"
+        style={{ padding: '0.15rem 0.5rem', fontSize: '0.78rem', opacity: count === 0 ? 0.4 : 1 }}
+      >
+        −
+      </button>
+      <span style={{ fontSize: '0.82rem', color: 'var(--color-text-primary)', minWidth: '1.1rem', textAlign: 'center' }}>{count}</span>
+      <button
+        onClick={() => onSave(count + 1)}
+        className="btn btn-ghost"
+        style={{ padding: '0.15rem 0.5rem', fontSize: '0.78rem' }}
+      >
+        +
+      </button>
     </div>
   );
 }
