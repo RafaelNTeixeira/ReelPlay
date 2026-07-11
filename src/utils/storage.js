@@ -25,6 +25,7 @@ const fromDb = (row) => ({
   recommended: row.recommended,
   containsSpoilers: row.contains_spoilers,
   reviewerPick: row.reviewer_pick ?? false,
+  episodeRatings: row.episode_ratings || {},
   year: row.year,
   genres: row.genres || [],
   tmdbRating: row.tmdb_rating,
@@ -48,6 +49,7 @@ const toDb = (r) => ({
   recommended: r.recommended,
   contains_spoilers: r.containsSpoilers,
   reviewer_pick: r.reviewerPick ?? false,
+  episode_ratings: r.episodeRatings ?? {},
   year: r.year,
   genres: r.genres,
   tmdb_rating: r.tmdbRating,
@@ -92,52 +94,93 @@ export const getReview = async (tmdbId, mediaType) => {
   return ls.all().find((r) => r.tmdbId === tmdbId && r.mediaType === mediaType) || null;
 };
 
-export const saveReview = async (reviewData) => {
-  const id = `${reviewData.tmdbId}-${reviewData.mediaType}`;
-  const now = new Date().toISOString();
+// -- Shared upsert (used by saveReview and saveEpisodeRating) ---
+const upsertRow = async (id, review) => {
   const client = db();
-
   if (client) {
-    const { data: existing } = await client
-      .from('reviews')
-      .select('created_at')
-      .eq('id', id)
-      .maybeSingle();
-
-    const review = {
-      ...reviewData,
-      id,
-      updatedAt: now,
-      createdAt: existing?.created_at || now,
-    };
-
     const { data, error } = await client
       .from('reviews')
       .upsert(toDb(review), { onConflict: 'id' })
       .select()
       .single();
-
     if (error) {
-      console.error('Supabase saveReview failed:', error);
+      console.error('Supabase write failed:', error);
       throw new Error(
-        `Could not save to Supabase (${error.message}). This is usually a Row Level Security policy blocking writes. Nothing was saved — your review was NOT silently stored elsewhere.`
+        `Could not save to Supabase (${error.message}). This is usually a Row Level Security policy blocking writes. Nothing was saved — your data was NOT silently stored elsewhere.`
       );
     }
     return fromDb(data);
   }
-
   // LocalStorage fallback — only used when Supabase isn't configured at all
   const all = ls.all();
   const idx = all.findIndex((r) => r.id === id);
-  const review = {
-    ...reviewData,
-    id,
-    updatedAt: now,
-    createdAt: idx >= 0 ? all[idx].createdAt : now,
-  };
   if (idx >= 0) all[idx] = review; else all.unshift(review);
   ls.set(all);
   return review;
+};
+
+export const saveReview = async (reviewData) => {
+  const id = `${reviewData.tmdbId}-${reviewData.mediaType}`;
+  const now = new Date().toISOString();
+  const existing = await getReview(reviewData.tmdbId, reviewData.mediaType);
+
+  const review = {
+    episodeRatings: existing?.episodeRatings || {},
+    ...reviewData,
+    id,
+    updatedAt: now,
+    createdAt: existing?.createdAt || now,
+  };
+  return upsertRow(id, review);
+};
+
+// -- Per-episode ratings (independent of the overall series review) ---
+// `seed` supplies title/poster/etc. so a first-time episode rating can
+// create a minimal review row even if no overall review exists yet.
+export const saveEpisodeRating = async (tmdbId, mediaType, seasonNumber, episodeNumber, rating, seed = {}) => {
+  const id = `${tmdbId}-${mediaType}`;
+  const now = new Date().toISOString();
+  const existing = await getReview(tmdbId, mediaType);
+
+  const episodeRatings = { ...(existing?.episodeRatings || {}) };
+  const seasonKey = String(seasonNumber);
+  const seasonRatings = { ...(episodeRatings[seasonKey] || {}) };
+  if (rating > 0) {
+    seasonRatings[String(episodeNumber)] = rating;
+  } else {
+    delete seasonRatings[String(episodeNumber)];
+  }
+  if (Object.keys(seasonRatings).length > 0) {
+    episodeRatings[seasonKey] = seasonRatings;
+  } else {
+    delete episodeRatings[seasonKey];
+  }
+
+  const review = {
+    tmdbId,
+    mediaType,
+    title: seed.title ?? null,
+    posterPath: seed.posterPath ?? null,
+    backdropPath: seed.backdropPath ?? null,
+    rating: 0,
+    reviewTitle: '',
+    reviewText: '',
+    watchedDate: null,
+    recommended: false,
+    containsSpoilers: false,
+    reviewerPick: false,
+    year: seed.year ?? null,
+    genres: seed.genres ?? [],
+    tmdbRating: seed.tmdbRating ?? null,
+    runtime: null,
+    director: null,
+    ...existing,
+    episodeRatings,
+    id,
+    updatedAt: now,
+    createdAt: existing?.createdAt || now,
+  };
+  return upsertRow(id, review);
 };
 
 export const deleteReview = async (tmdbId, mediaType) => {
@@ -158,7 +201,8 @@ export const deleteReview = async (tmdbId, mediaType) => {
 };
 
 export const getStats = async () => {
-  const reviews = await getReviews();
+  const all = await getReviews();
+  const reviews = all.filter((r) => r.rating > 0); // exclude in-progress stubs (episode-only ratings, no overall review)
   const ratings = reviews.map((r) => r.rating).filter(Boolean);
   const avg = ratings.length
     ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)

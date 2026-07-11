@@ -17,7 +17,7 @@ export default function Home() {
     const load = async () => {
       setLoading(true);
       const [data, s] = await Promise.all([getReviews(), getStats()]);
-      setReviews(data);
+      setReviews(data.filter((r) => r.rating > 0));
       setStats(s);
       setLoading(false);
     };
