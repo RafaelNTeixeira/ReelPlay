@@ -5,6 +5,8 @@ import { posterUrl, backdropUrl } from '../config';
 import MovieCard from '../components/MovieCard';
 import StarRating from '../components/StarRating';
 
+const PAGE_SIZE = 24;
+
 export default function Home() {
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ total: 0, movies: 0, tv: 0, games: 0, recommended: 0, picks: 0, avgRating: null });
@@ -13,6 +15,16 @@ export default function Home() {
   const filter = searchParams.get('type') || 'all';
   const activeGenre = searchParams.get('genre') || null;
   const [sortBy, setSortBy] = useState('latest');
+  const [visibleAll, setVisibleAll] = useState(PAGE_SIZE);
+  const [visibleCinema, setVisibleCinema] = useState(PAGE_SIZE);
+  const [visibleGames, setVisibleGames] = useState(PAGE_SIZE);
+
+  // Reset pagination whenever the active filter/sort changes
+  useEffect(() => {
+    setVisibleAll(PAGE_SIZE);
+    setVisibleCinema(PAGE_SIZE);
+    setVisibleGames(PAGE_SIZE);
+  }, [filter, activeGenre, sortBy]);
 
   useEffect(() => {
     const load = async () => {
@@ -217,8 +229,11 @@ export default function Home() {
                   <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{cinemaReviews.length} review{cinemaReviews.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-                  {cinemaReviews.map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
+                  {cinemaReviews.slice(0, visibleCinema).map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
                 </div>
+                {cinemaReviews.length > visibleCinema && (
+                  <LoadMoreButton onClick={() => setVisibleCinema((v) => v + PAGE_SIZE)} remaining={cinemaReviews.length - visibleCinema} />
+                )}
               </div>
             )}
             {gameReviews.length > 0 && (
@@ -228,23 +243,31 @@ export default function Home() {
                   <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{gameReviews.length} review{gameReviews.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-                  {gameReviews.map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
+                  {gameReviews.slice(0, visibleGames).map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
                 </div>
+                {gameReviews.length > visibleGames && (
+                  <LoadMoreButton onClick={() => setVisibleGames((v) => v + PAGE_SIZE)} remaining={gameReviews.length - visibleGames} />
+                )}
               </div>
             )}
           </div>
         ) : (
           /* Single-type filtered view */
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: (filter === 'game' || (filter === 'pick' && gameReviews.length > 0 && cinemaReviews.length === 0))
-              ? 'repeat(auto-fill, minmax(240px, 1fr))'
-              : 'repeat(auto-fill, minmax(195px, 1fr))',
-            gap: '1.5rem',
-            alignItems: 'start',
-          }}>
-            {filtered.map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
-          </div>
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: (filter === 'game' || (filter === 'pick' && gameReviews.length > 0 && cinemaReviews.length === 0))
+                ? 'repeat(auto-fill, minmax(240px, 1fr))'
+                : 'repeat(auto-fill, minmax(195px, 1fr))',
+              gap: '1.5rem',
+              alignItems: 'start',
+            }}>
+              {filtered.slice(0, visibleAll).map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
+            </div>
+            {filtered.length > visibleAll && (
+              <LoadMoreButton onClick={() => setVisibleAll((v) => v + PAGE_SIZE)} remaining={filtered.length - visibleAll} />
+            )}
+          </>
         )}
       </div>
     </div>
@@ -304,6 +327,16 @@ function FeaturedHero({ review }) {
           </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+function LoadMoreButton({ onClick, remaining }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+      <button className="btn btn-outline" onClick={onClick}>
+        Load More · {remaining} remaining
+      </button>
     </div>
   );
 }
