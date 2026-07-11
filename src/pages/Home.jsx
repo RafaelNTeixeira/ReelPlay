@@ -5,19 +5,32 @@ import { posterUrl, backdropUrl } from '../config';
 import MovieCard from '../components/MovieCard';
 import StarRating from '../components/StarRating';
 
+const PAGE_SIZE = 24;
+
 export default function Home() {
   const [reviews, setReviews] = useState([]);
-  const [stats, setStats] = useState({ total: 0, movies: 0, tv: 0, games: 0, recommended: 0, avgRating: null });
+  const [stats, setStats] = useState({ total: 0, movies: 0, tv: 0, games: 0, recommended: 0, picks: 0, avgRating: null });
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.get('type') || 'all';
+  const activeGenre = searchParams.get('genre') || null;
   const [sortBy, setSortBy] = useState('latest');
+  const [visibleAll, setVisibleAll] = useState(PAGE_SIZE);
+  const [visibleCinema, setVisibleCinema] = useState(PAGE_SIZE);
+  const [visibleGames, setVisibleGames] = useState(PAGE_SIZE);
+
+  // Reset pagination whenever the active filter/sort changes
+  useEffect(() => {
+    setVisibleAll(PAGE_SIZE);
+    setVisibleCinema(PAGE_SIZE);
+    setVisibleGames(PAGE_SIZE);
+  }, [filter, activeGenre, sortBy]);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       const [data, s] = await Promise.all([getReviews(), getStats()]);
-      setReviews(data);
+      setReviews(data.filter((r) => r.rating > 0));
       setStats(s);
       setLoading(false);
     };
@@ -26,23 +39,48 @@ export default function Home() {
 
   const featured = reviews[0];
 
-  const filtered = reviews
-    .filter((r) => {
-      if (filter === 'movie') return r.mediaType === 'movie';
-      if (filter === 'tv')    return r.mediaType === 'tv';
-      if (filter === 'game')  return r.mediaType === 'game';
-      return true;
-    })
+  const typeFiltered = reviews.filter((r) => {
+    if (filter === 'movie') return r.mediaType === 'movie';
+    if (filter === 'tv')    return r.mediaType === 'tv';
+    if (filter === 'game')  return r.mediaType === 'game';
+    if (filter === 'pick')  return r.reviewerPick === true;
+    return true;
+  });
+
+  // Genres available given the current type/pick filter, with counts, sorted by frequency
+  const genreCounts = {};
+  typeFiltered.forEach((r) => {
+    (r.genres || []).forEach((g) => { genreCounts[g] = (genreCounts[g] || 0) + 1; });
+  });
+  const availableGenres = Object.keys(genreCounts).sort((a, b) => genreCounts[b] - genreCounts[a] || a.localeCompare(b));
+
+  const filtered = typeFiltered
+    .filter((r) => !activeGenre || (r.genres || []).includes(activeGenre))
     .sort((a, b) => {
-      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
-      if (sortBy === 'title')  return a.title.localeCompare(b.title);
+      if (sortBy === 'rating')    return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === 'title')     return a.title.localeCompare(b.title);
+      if (sortBy === 'rewatched') return (b.rewatchCount || 0) - (a.rewatchCount || 0);
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+
+  const setType = (value) => {
+    const next = {};
+    if (value !== 'all') next.type = value;
+    if (activeGenre) next.genre = activeGenre;
+    setSearchParams(next);
+  };
+
+  const setGenre = (genre) => {
+    const next = {};
+    if (filter !== 'all') next.type = filter;
+    if (genre !== activeGenre) next.genre = genre;
+    setSearchParams(next);
+  };
 
   // Separate for "all" view with section headers
   const cinemaReviews = filtered.filter((r) => r.mediaType !== 'game');
   const gameReviews   = filtered.filter((r) => r.mediaType === 'game');
-  const showSections  = filter === 'all' && cinemaReviews.length > 0 && gameReviews.length > 0;
+  const showSections  = (filter === 'all' || filter === 'pick') && cinemaReviews.length > 0 && gameReviews.length > 0;
 
   return (
     <div style={{ paddingTop: 'var(--navbar-height)' }}>
@@ -66,6 +104,7 @@ export default function Home() {
                 { label: 'Series',      value: stats.tv,          accent: '#78b4c8' },
                 { label: 'Games',       value: stats.games,       accent: 'var(--color-game)' },
                 { label: 'Recommended', value: stats.recommended, accent: '#6bc87a' },
+                { label: "Reviewer's Picks", value: stats.picks, accent: '#e2a84b' },
                 ...(stats.avgRating ? [{ label: 'Avg Rating', value: `${stats.avgRating} ★`, accent: 'var(--color-text-primary)' }] : []),
               ].map(({ label, value, accent }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
@@ -82,18 +121,19 @@ export default function Home() {
       <div className="page-container" style={{ padding: '3rem 2rem 5rem' }}>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.1rem' }}>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {[
               { label: 'All',      value: 'all',   color: 'var(--color-text-primary)' },
               { label: '▶ Films',  value: 'movie', color: 'var(--color-cinema)' },
               { label: '⬛ Series', value: 'tv',    color: '#78b4c8' },
               { label: '🎮 Games', value: 'game',  color: 'var(--color-game)' },
+              { label: '⭐ Picks',  value: 'pick',  color: '#e2a84b' },
             ].map(({ label, value, color }) => {
               const active = filter === value;
               return (
                 <button key={value}
-                  onClick={() => setSearchParams(value === 'all' ? {} : { type: value })}
+                  onClick={() => setType(value)}
                   style={{
                     background: active ? color : 'transparent',
                     color: active ? '#07070f' : 'var(--color-text-secondary)',
@@ -115,9 +155,62 @@ export default function Home() {
               <option value="latest">Latest</option>
               <option value="rating">Highest Rated</option>
               <option value="title">A–Z</option>
+              <option value="rewatched">Most Rewatched</option>
             </select>
           </div>
         </div>
+
+        {/* Genre filter */}
+        {availableGenres.length > 0 && (
+          <div className="scroll-row" style={{ marginBottom: '2.5rem' }}>
+            {availableGenres.map((g) => {
+              const active = activeGenre === g;
+              return (
+                <button
+                  key={g}
+                  onClick={() => setGenre(g)}
+                  style={{
+                    flexShrink: 0,
+                    background: active ? 'var(--color-accent)' : 'transparent',
+                    color: active ? '#07070f' : 'var(--color-text-muted)',
+                    border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                    borderRadius: '999px',
+                    padding: '0.3rem 0.8rem',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  {g}
+                  <span style={{ opacity: 0.6, fontWeight: 400 }}>{genreCounts[g]}</span>
+                </button>
+              );
+            })}
+            {activeGenre && (
+              <button
+                onClick={() => setGenre(activeGenre)}
+                style={{
+                  flexShrink: 0,
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '0.7rem',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: '0.3rem 0.4rem',
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Content */}
         {loading ? (
@@ -127,7 +220,7 @@ export default function Home() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState filter={filter} hasAny={reviews.length > 0} />
+          <EmptyState filter={filter} activeGenre={activeGenre} hasAny={reviews.length > 0} />
         ) : showSections ? (
           /* Split sections when showing all with mixed content */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
@@ -138,8 +231,11 @@ export default function Home() {
                   <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{cinemaReviews.length} review{cinemaReviews.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-                  {cinemaReviews.map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
+                  {cinemaReviews.slice(0, visibleCinema).map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
                 </div>
+                {cinemaReviews.length > visibleCinema && (
+                  <LoadMoreButton onClick={() => setVisibleCinema((v) => v + PAGE_SIZE)} remaining={cinemaReviews.length - visibleCinema} />
+                )}
               </div>
             )}
             {gameReviews.length > 0 && (
@@ -149,23 +245,31 @@ export default function Home() {
                   <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{gameReviews.length} review{gameReviews.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-                  {gameReviews.map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
+                  {gameReviews.slice(0, visibleGames).map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
                 </div>
+                {gameReviews.length > visibleGames && (
+                  <LoadMoreButton onClick={() => setVisibleGames((v) => v + PAGE_SIZE)} remaining={gameReviews.length - visibleGames} />
+                )}
               </div>
             )}
           </div>
         ) : (
           /* Single-type filtered view */
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: filter === 'game'
-              ? 'repeat(auto-fill, minmax(240px, 1fr))'
-              : 'repeat(auto-fill, minmax(195px, 1fr))',
-            gap: '1.5rem',
-            alignItems: 'start',
-          }}>
-            {filtered.map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
-          </div>
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: (filter === 'game' || (filter === 'pick' && gameReviews.length > 0 && cinemaReviews.length === 0))
+                ? 'repeat(auto-fill, minmax(240px, 1fr))'
+                : 'repeat(auto-fill, minmax(195px, 1fr))',
+              gap: '1.5rem',
+              alignItems: 'start',
+            }}>
+              {filtered.slice(0, visibleAll).map((r, i) => <MovieCard key={r.id} review={r} index={i} />)}
+            </div>
+            {filtered.length > visibleAll && (
+              <LoadMoreButton onClick={() => setVisibleAll((v) => v + PAGE_SIZE)} remaining={filtered.length - visibleAll} />
+            )}
+          </>
         )}
       </div>
     </div>
@@ -229,7 +333,17 @@ function FeaturedHero({ review }) {
   );
 }
 
-function EmptyState({ filter, hasAny }) {
+function LoadMoreButton({ onClick, remaining }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+      <button className="btn btn-outline" onClick={onClick}>
+        Load More · {remaining} remaining
+      </button>
+    </div>
+  );
+}
+
+function EmptyState({ filter, activeGenre, hasAny }) {
   const isGame = filter === 'game';
   return (
     <div style={{ textAlign: 'center', padding: '6rem 2rem', color: 'var(--color-text-muted)' }}>
@@ -237,7 +351,11 @@ function EmptyState({ filter, hasAny }) {
       <h3 style={{ fontFamily: isGame ? 'var(--font-game)' : 'var(--font-display)', fontSize: '1.5rem', fontWeight: isGame ? 700 : 400, color: 'var(--color-text-secondary)', marginBottom: '0.5rem', textTransform: isGame ? 'uppercase' : 'none', letterSpacing: isGame ? '0.1em' : '0' }}>
         {hasAny ? 'No reviews match this filter' : isGame ? 'No games reviewed yet' : 'The reel is empty'}
       </h3>
-      <p style={{ fontSize: '0.88rem' }}>{hasAny ? 'Try a different filter.' : 'Log in as admin to start adding reviews.'}</p>
+      <p style={{ fontSize: '0.88rem' }}>
+        {hasAny
+          ? activeGenre ? `Nothing tagged "${activeGenre}" here yet.` : 'Try a different filter.'
+          : 'Log in as admin to start adding reviews.'}
+      </p>
     </div>
   );
 }

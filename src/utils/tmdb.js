@@ -21,6 +21,9 @@ export const getTVDetails = (id) =>
 export const getMovieVideos = (id) => request(`/movie/${id}/videos`);
 export const getTVVideos = (id) => request(`/tv/${id}/videos`);
 
+export const getTVSeasonDetails = (id, seasonNumber) =>
+  request(`/tv/${id}/season/${seasonNumber}`);
+
 export const getMovieCredits = (id) => request(`/movie/${id}/credits`);
 export const getTVCredits = (id) => request(`/tv/${id}/aggregate_credits`);
 

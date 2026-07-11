@@ -11,7 +11,10 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
   );
   const [recommended, setRecommended] = useState(existingReview?.recommended ?? true);
   const [spoilers, setSpoilers] = useState(existingReview?.containsSpoilers ?? false);
+  const [reviewerPick, setReviewerPick] = useState(existingReview?.reviewerPick ?? false);
+  const [rewatchCount, setRewatchCount] = useState(existingReview?.rewatchCount ?? 0);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const wordCount = reviewText.trim().split(/\s+/).filter(Boolean).length;
   const readingTime = Math.ceil(wordCount / 200);
@@ -22,8 +25,9 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
       return;
     }
     setSaving(true);
+    setSaveError(null);
     try {
-      const saved = saveReview({
+      const saved = await saveReview({
         tmdbId: movie.id,
         mediaType,
         title: movie.title || movie.name,
@@ -35,6 +39,8 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         watchedDate,
         recommended,
         containsSpoilers: spoilers,
+        reviewerPick,
+        rewatchCount,
         year: (movie.release_date || movie.first_air_date || '').slice(0, 4),
         genres: movie.genres?.map((g) => g.name) || [],
         tmdbRating: movie.vote_average,
@@ -42,6 +48,9 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         director: movie.credits?.crew?.find((c) => c.job === 'Director')?.name || null,
       });
       onSave(saved);
+    } catch (err) {
+      console.error(err);
+      setSaveError(err.message || 'Something went wrong while saving.');
     } finally {
       setSaving(false);
     }
@@ -157,7 +166,39 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
             />
           </div>
 
-          <div className="form-group" style={{ justifyContent: 'flex-end' }}>
+          <div className="form-group">
+            <label className="form-label">🔁 Rewatches</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setRewatchCount((c) => Math.max(0, c - 1))}
+                disabled={rewatchCount === 0}
+                className="btn btn-ghost"
+                style={{ padding: '0.4rem 0.7rem', fontSize: '0.9rem', opacity: rewatchCount === 0 ? 0.4 : 1 }}
+              >
+                −
+              </button>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', minWidth: '1.5rem', textAlign: 'center' }}>
+                {rewatchCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setRewatchCount((c) => c + 1)}
+                className="btn btn-ghost"
+                style={{ padding: '0.4rem 0.7rem', fontSize: '0.9rem' }}
+              >
+                +
+              </button>
+              <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                {rewatchCount === 0 ? 'Watched once' : `Watched ${rewatchCount + 1}× total`}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Second row: flags */}
+        <div>
+          <div className="form-group">
             <label className="form-label">Flags</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               <ToggleOption
@@ -172,9 +213,29 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
                 label="⚠️ Contains Spoilers"
                 description="Warn readers before reading?"
               />
+              <ToggleOption
+                checked={reviewerPick}
+                onChange={setReviewerPick}
+                label="⭐ Reviewer's Pick"
+                description="Feature this as an all-time favorite"
+              />
             </div>
           </div>
         </div>
+
+        {/* Save error */}
+        {saveError && (
+          <div style={{
+            background: 'rgba(224,85,85,0.08)',
+            border: '1px solid rgba(224,85,85,0.35)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.85rem 1.1rem',
+            color: '#e05555',
+            fontSize: '0.85rem',
+          }}>
+            ⚠ {saveError}
+          </div>
+        )}
 
         {/* Actions */}
         <div style={{

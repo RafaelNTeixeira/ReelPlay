@@ -17,6 +17,7 @@ import TheaterMode from '../components/TheaterMode';
 import StarRating from '../components/StarRating';
 import CastCarousel from '../components/CastCarousel';
 import ReviewForm from '../components/ReviewForm';
+import EpisodeRatings from '../components/EpisodeRatings';
 
 export default function MovieDetail({ mediaType }) {
   const { id } = useParams();
@@ -80,8 +81,18 @@ export default function MovieDetail({ mediaType }) {
   }, []);
 
   const handleDelete = async () => {
-    setReview(null);
-    setConfirmDelete(false);
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    try {
+      await deleteReview(Number(id), mediaType);
+      setReview(null);
+      setConfirmDelete(false);
+    } catch (err) {
+      alert(err.message || 'Failed to delete review.');
+      setConfirmDelete(false);
+    }
   };
 
   const handleShare = () => {
@@ -389,7 +400,7 @@ export default function MovieDetail({ mediaType }) {
             )}
 
             {/* ═══ REVIEW DISPLAY ═══ */}
-            {review && !showReviewForm && (
+            {review && review.rating > 0 && !showReviewForm && (
               <ReviewDisplay
                 review={review}
                 spoilerRevealed={spoilerRevealed}
@@ -399,8 +410,8 @@ export default function MovieDetail({ mediaType }) {
               />
             )}
 
-            {/* No review yet */}
-            {!review && !showReviewForm && (
+            {/* No overall review yet (episode ratings, if any, still show below) */}
+            {(!review || review.rating === 0) && !showReviewForm && (
               <div style={{
                 background: 'var(--color-bg-card)',
                 border: '1px solid var(--color-border)',
@@ -411,10 +422,29 @@ export default function MovieDetail({ mediaType }) {
               }}>
                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
                   {isAdmin
-                    ? 'No review yet. Click "Write Review" above to add your thoughts.'
+                    ? 'No overall review yet. Click "Write Review" above to add your thoughts.'
                     : 'No review has been written for this title yet.'}
                 </p>
               </div>
+            )}
+
+            {/* Episode ratings (TV only) */}
+            {mediaType === 'tv' && (
+              <EpisodeRatings
+                tmdbId={Number(id)}
+                seasons={details.seasons}
+                episodeRatings={review?.episodeRatings || {}}
+                isAdmin={isAdmin}
+                onRatingsChange={(saved) => setReview(saved)}
+                seed={{
+                  title,
+                  posterPath: details.poster_path,
+                  backdropPath: details.backdrop_path,
+                  year,
+                  genres: genres.map((g) => g.name),
+                  tmdbRating: details.vote_average,
+                }}
+              />
             )}
 
             {/* Cast */}
@@ -483,7 +513,7 @@ function ReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readingTim
             }}>
               ✦ CRITIC'S REVIEW
             </span>
-            {review.rating >= 4.5 && (
+            {review.reviewerPick && (
               <span style={{
                 background: 'var(--color-accent)',
                 color: '#07070f',
@@ -493,7 +523,7 @@ function ReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readingTim
                 padding: '0.15rem 0.4rem',
                 borderRadius: '2px',
               }}>
-                CRITIC'S PICK
+                ★ REVIEWER'S PICK
               </span>
             )}
           </div>

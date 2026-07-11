@@ -62,14 +62,28 @@ function CinemaCard({ review, imgSrc, isTv, index, navigate }) {
           </span>
         </div>
 
-        {review.rating >= 4.5 && (
+        {review.reviewerPick && (
           <div style={{ position: 'absolute', top: '0.65rem', right: '0.65rem', background: 'var(--color-cinema)', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            ★ PICK
+            ★ Reviewer's Pick
           </div>
         )}
         {review.recommended && (
           <div style={{ position: 'absolute', bottom: '0.65rem', right: '0.65rem' }}>
             <span title="Recommended" style={{ fontSize: '1.1rem' }}>💚</span>
+          </div>
+        )}
+        {review.rewatchCount > 0 && (
+          <div style={{ position: 'absolute', bottom: '0.65rem', left: '0.65rem' }}>
+            <span
+              title={`Watched ${review.rewatchCount + 1}× total`}
+              style={{
+                fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.06em',
+                color: '#fff', background: 'rgba(7,7,15,0.75)', padding: '0.15rem 0.4rem',
+                borderRadius: '2px', backdropFilter: 'blur(4px)',
+              }}
+            >
+              🔁 {review.rewatchCount + 1}×
+            </span>
           </div>
         )}
       </div>
@@ -130,9 +144,9 @@ function GameCard({ review, imgSrc, index, navigate }) {
         </div>
 
         {/* Critic pick */}
-        {review.rating >= 4.5 && (
+        {review.reviewerPick && (
           <div style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', zIndex: 4, background: 'var(--color-game)', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', fontFamily: 'var(--font-game)', textTransform: 'uppercase' }}>
-            ★ PICK
+            ★ Reviewer's Pick
           </div>
         )}
 
@@ -140,6 +154,20 @@ function GameCard({ review, imgSrc, index, navigate }) {
         {review.recommended && (
           <div style={{ position: 'absolute', bottom: '0.6rem', right: '0.6rem', zIndex: 4 }}>
             <span title="Recommended" style={{ fontSize: '1.05rem' }}>💚</span>
+          </div>
+        )}
+        {review.rewatchCount > 0 && (
+          <div style={{ position: 'absolute', bottom: '0.6rem', left: '0.6rem', zIndex: 4 }}>
+            <span
+              title={`Played ${review.rewatchCount + 1}× total`}
+              style={{
+                fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.06em',
+                color: '#fff', background: 'rgba(7,7,15,0.75)', padding: '0.15rem 0.4rem',
+                borderRadius: '2px', backdropFilter: 'blur(4px)',
+              }}
+            >
+              🔁 {review.rewatchCount + 1}×
+            </span>
           </div>
         )}
 

@@ -28,6 +28,10 @@ export const IMAGE_SIZES = {
     md: 'w185',
     lg: 'h632',
   },
+  still: {
+    sm: 'w185',
+    md: 'w300',
+  },
 };
 
 export const posterUrl = (path, size = 'md') =>
@@ -38,3 +42,6 @@ export const backdropUrl = (path, size = 'lg') =>
 
 export const profileUrl = (path, size = 'md') =>
   path ? `${TMDB_IMAGE_BASE}/${IMAGE_SIZES.profile[size]}${path}` : null;
+
+export const stillUrl = (path, size = 'md') =>
+  path ? `${TMDB_IMAGE_BASE}/${IMAGE_SIZES.still[size]}${path}` : null;
