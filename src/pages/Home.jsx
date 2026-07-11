@@ -11,6 +11,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.get('type') || 'all';
+  const activeGenre = searchParams.get('genre') || null;
   const [sortBy, setSortBy] = useState('latest');
 
   useEffect(() => {
@@ -26,19 +27,42 @@ export default function Home() {
 
   const featured = reviews[0];
 
-  const filtered = reviews
-    .filter((r) => {
-      if (filter === 'movie') return r.mediaType === 'movie';
-      if (filter === 'tv')    return r.mediaType === 'tv';
-      if (filter === 'game')  return r.mediaType === 'game';
-      if (filter === 'pick')  return r.reviewerPick === true;
-      return true;
-    })
+  const typeFiltered = reviews.filter((r) => {
+    if (filter === 'movie') return r.mediaType === 'movie';
+    if (filter === 'tv')    return r.mediaType === 'tv';
+    if (filter === 'game')  return r.mediaType === 'game';
+    if (filter === 'pick')  return r.reviewerPick === true;
+    return true;
+  });
+
+  // Genres available given the current type/pick filter, with counts, sorted by frequency
+  const genreCounts = {};
+  typeFiltered.forEach((r) => {
+    (r.genres || []).forEach((g) => { genreCounts[g] = (genreCounts[g] || 0) + 1; });
+  });
+  const availableGenres = Object.keys(genreCounts).sort((a, b) => genreCounts[b] - genreCounts[a] || a.localeCompare(b));
+
+  const filtered = typeFiltered
+    .filter((r) => !activeGenre || (r.genres || []).includes(activeGenre))
     .sort((a, b) => {
       if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
       if (sortBy === 'title')  return a.title.localeCompare(b.title);
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+
+  const setType = (value) => {
+    const next = {};
+    if (value !== 'all') next.type = value;
+    if (activeGenre) next.genre = activeGenre;
+    setSearchParams(next);
+  };
+
+  const setGenre = (genre) => {
+    const next = {};
+    if (filter !== 'all') next.type = filter;
+    if (genre !== activeGenre) next.genre = genre;
+    setSearchParams(next);
+  };
 
   // Separate for "all" view with section headers
   const cinemaReviews = filtered.filter((r) => r.mediaType !== 'game');
@@ -84,7 +108,7 @@ export default function Home() {
       <div className="page-container" style={{ padding: '3rem 2rem 5rem' }}>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.1rem' }}>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {[
               { label: 'All',      value: 'all',   color: 'var(--color-text-primary)' },
@@ -96,7 +120,7 @@ export default function Home() {
               const active = filter === value;
               return (
                 <button key={value}
-                  onClick={() => setSearchParams(value === 'all' ? {} : { type: value })}
+                  onClick={() => setType(value)}
                   style={{
                     background: active ? color : 'transparent',
                     color: active ? '#07070f' : 'var(--color-text-secondary)',
@@ -122,6 +146,58 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Genre filter */}
+        {availableGenres.length > 0 && (
+          <div className="scroll-row" style={{ marginBottom: '2.5rem' }}>
+            {availableGenres.map((g) => {
+              const active = activeGenre === g;
+              return (
+                <button
+                  key={g}
+                  onClick={() => setGenre(g)}
+                  style={{
+                    flexShrink: 0,
+                    background: active ? 'var(--color-accent)' : 'transparent',
+                    color: active ? '#07070f' : 'var(--color-text-muted)',
+                    border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                    borderRadius: '999px',
+                    padding: '0.3rem 0.8rem',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  {g}
+                  <span style={{ opacity: 0.6, fontWeight: 400 }}>{genreCounts[g]}</span>
+                </button>
+              );
+            })}
+            {activeGenre && (
+              <button
+                onClick={() => setGenre(activeGenre)}
+                style={{
+                  flexShrink: 0,
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '0.7rem',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: '0.3rem 0.4rem',
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Content */}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: '1.5rem' }}>
@@ -130,7 +206,7 @@ export default function Home() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState filter={filter} hasAny={reviews.length > 0} />
+          <EmptyState filter={filter} activeGenre={activeGenre} hasAny={reviews.length > 0} />
         ) : showSections ? (
           /* Split sections when showing all with mixed content */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
@@ -232,7 +308,7 @@ function FeaturedHero({ review }) {
   );
 }
 
-function EmptyState({ filter, hasAny }) {
+function EmptyState({ filter, activeGenre, hasAny }) {
   const isGame = filter === 'game';
   return (
     <div style={{ textAlign: 'center', padding: '6rem 2rem', color: 'var(--color-text-muted)' }}>
@@ -240,7 +316,11 @@ function EmptyState({ filter, hasAny }) {
       <h3 style={{ fontFamily: isGame ? 'var(--font-game)' : 'var(--font-display)', fontSize: '1.5rem', fontWeight: isGame ? 700 : 400, color: 'var(--color-text-secondary)', marginBottom: '0.5rem', textTransform: isGame ? 'uppercase' : 'none', letterSpacing: isGame ? '0.1em' : '0' }}>
         {hasAny ? 'No reviews match this filter' : isGame ? 'No games reviewed yet' : 'The reel is empty'}
       </h3>
-      <p style={{ fontSize: '0.88rem' }}>{hasAny ? 'Try a different filter.' : 'Log in as admin to start adding reviews.'}</p>
+      <p style={{ fontSize: '0.88rem' }}>
+        {hasAny
+          ? activeGenre ? `Nothing tagged "${activeGenre}" here yet.` : 'Try a different filter.'
+          : 'Log in as admin to start adding reviews.'}
+      </p>
     </div>
   );
 }
