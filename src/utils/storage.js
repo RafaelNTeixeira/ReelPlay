@@ -241,3 +241,88 @@ export const getStats = async () => {
     avgRating: avg,
   };
 };
+
+// ═══════════════════════════════════════════════════════════════
+// WATCHLIST — separate table from reviews (unwatched/unplayed titles)
+// ═══════════════════════════════════════════════════════════════
+
+const fromWatchlistDb = (row) => ({
+  id: row.id,
+  tmdbId: row.tmdb_id,
+  mediaType: row.media_type,
+  title: row.title,
+  posterPath: row.poster_path,
+  backdropPath: row.backdrop_path,
+  year: row.year,
+  genres: row.genres || [],
+  tmdbRating: row.tmdb_rating,
+  addedAt: row.added_at,
+});
+
+const toWatchlistDb = (w) => ({
+  id: w.id,
+  tmdb_id: w.tmdbId,
+  media_type: w.mediaType,
+  title: w.title,
+  poster_path: w.posterPath,
+  backdrop_path: w.backdropPath,
+  year: w.year,
+  genres: w.genres,
+  tmdb_rating: w.tmdbRating,
+  added_at: w.addedAt,
+});
+
+const LS_WATCHLIST_KEY = 'reelplay_watchlist';
+const lsWatchlist = {
+  all: () => { try { return JSON.parse(localStorage.getItem(LS_WATCHLIST_KEY) || '[]'); } catch { return []; } },
+  set: (data) => localStorage.setItem(LS_WATCHLIST_KEY, JSON.stringify(data)),
+};
+
+export const getWatchlist = async () => {
+  const client = db();
+  if (client) {
+    const { data, error } = await client
+      .from('watchlist')
+      .select('*')
+      .order('added_at', { ascending: false });
+    if (!error && data) return data.map(fromWatchlistDb);
+  }
+  return lsWatchlist.all();
+};
+
+export const addToWatchlist = async (item) => {
+  const id = `${item.tmdbId}-${item.mediaType}`;
+  const entry = { ...item, id, addedAt: new Date().toISOString() };
+  const client = db();
+  if (client) {
+    const { data, error } = await client
+      .from('watchlist')
+      .upsert(toWatchlistDb(entry), { onConflict: 'id' })
+      .select()
+      .single();
+    if (error) {
+      console.error('Supabase addToWatchlist failed:', error);
+      throw new Error(`Could not add to watchlist (${error.message}). Make sure the "watchlist" table exists with RLS policies allowing writes.`);
+    }
+    return fromWatchlistDb(data);
+  }
+  const all = lsWatchlist.all();
+  const idx = all.findIndex((w) => w.id === id);
+  if (idx >= 0) all[idx] = entry; else all.unshift(entry);
+  lsWatchlist.set(all);
+  return entry;
+};
+
+export const removeFromWatchlist = async (tmdbId, mediaType) => {
+  const id = `${tmdbId}-${mediaType}`;
+  const client = db();
+  if (client) {
+    const { error } = await client.from('watchlist').delete().eq('id', id);
+    if (error) {
+      console.error('Supabase removeFromWatchlist failed:', error);
+      throw new Error(`Could not remove from watchlist (${error.message}).`);
+    }
+    return;
+  }
+  lsWatchlist.set(lsWatchlist.all().filter((w) => w.id !== id));
+};

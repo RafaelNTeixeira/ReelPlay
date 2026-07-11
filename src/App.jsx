@@ -9,6 +9,7 @@ import GameDetail from './pages/GameDetail';
 import AdminLogin from './pages/AdminLogin';
 import Stats from './pages/Stats';
 import AdminManage from './pages/AdminManage';
+import Watchlist from './pages/Watchlist';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/tv/:id" element={<MovieDetail mediaType="tv" />} />
             <Route path="/game/:id" element={<GameDetail />} />
             <Route path="/stats" element={<Stats />} />
+            <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/admin/manage" element={<AdminManage />} />
             <Route path="/admin" element={<AdminLogin />} />
           </Routes>

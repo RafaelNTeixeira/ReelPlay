@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { saveReview } from '../utils/storage';
+import { saveReview, removeFromWatchlist } from '../utils/storage';
 import StarRating from './StarRating';
 
 export default function ReviewForm({ movie, mediaType, existingReview, onSave, onCancel, overridePosterUrl, overrideBackdropUrl }) {
@@ -47,6 +47,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         runtime: movie.runtime || movie.episode_run_time?.[0] || null,
         director: movie.credits?.crew?.find((c) => c.job === 'Director')?.name || null,
       });
+      removeFromWatchlist(movie.id, mediaType).catch(() => {}); // best-effort, don't block on this
       onSave(saved);
     } catch (err) {
       console.error(err);
