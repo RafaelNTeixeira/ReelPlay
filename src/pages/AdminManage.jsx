@@ -118,7 +118,7 @@ export default function AdminManage() {
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.4rem' }}>
             Edit rating, rewatch count, and Movie of the Year per title, or select multiple to update Recommended / Reviewer's Pick in bulk.
             For TV series, this is the overall series rating only — episode ratings are managed on the series page itself.
-            Multiple movies can share the same Movie of the Year year — think of it as your shortlist of contenders, not a single winner.
+            Movie of the Year is always filed under the title's own release year — multiple movies can share a year as contenders.
           </p>
         </div>
 
@@ -366,31 +366,21 @@ function RewatchCell({ review, onSave }) {
 }
 
 function MovieOfYearCell({ review, onSave }) {
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 15 }, (_, i) => currentYear - i);
-  const value = review.movieOfTheYear ?? '';
+  const releaseYear = review.year ? parseInt(review.year, 10) : null;
+  const checked = review.movieOfTheYear != null;
+
+  if (!releaseYear) {
+    return <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem' }} title="Release year unknown for this title">n/a</span>;
+  }
 
   return (
-    <select
-      value={value}
-      onChange={(e) => onSave(e.target.value === '' ? null : Number(e.target.value))}
-      style={{
-        background: value ? 'rgba(226,184,62,0.14)' : 'var(--color-bg-elevated)',
-        border: `1px solid ${value ? '#e2b83e' : 'var(--color-border)'}`,
-        borderRadius: 'var(--radius-sm)',
-        color: value ? '#e2b83e' : 'var(--color-text-secondary)',
-        fontSize: '0.78rem',
-        fontWeight: value ? 700 : 400,
-        padding: '0.3rem 0.5rem',
-        cursor: 'pointer',
-        outline: 'none',
-        width: '100%',
-      }}
-    >
-      <option value="">— None —</option>
-      {years.map((y) => (
-        <option key={y} value={y}>🏆 {y}</option>
-      ))}
-    </select>
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: checked ? '#e2b83e' : 'var(--color-text-secondary)', fontSize: '0.78rem', fontWeight: checked ? 700 : 400 }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={() => onSave(checked ? null : releaseYear)}
+      />
+      {checked ? `🏆 ${review.movieOfTheYear}` : `Mark (${releaseYear})`}
+    </label>
   );
 }

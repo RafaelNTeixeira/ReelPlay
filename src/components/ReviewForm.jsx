@@ -13,9 +13,8 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
   const [spoilers, setSpoilers] = useState(existingReview?.containsSpoilers ?? false);
   const [reviewerPick, setReviewerPick] = useState(existingReview?.reviewerPick ?? false);
   const [rewatchCount, setRewatchCount] = useState(existingReview?.rewatchCount ?? 0);
-  const currentYear = new Date().getFullYear();
+  const releaseYear = movie.release_date ? parseInt(movie.release_date.slice(0, 4), 10) : null;
   const [isMovieOfYear, setIsMovieOfYear] = useState(existingReview?.movieOfTheYear != null);
-  const [movieOfYear, setMovieOfYear] = useState(existingReview?.movieOfTheYear ?? currentYear);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -44,7 +43,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         containsSpoilers: spoilers,
         reviewerPick,
         rewatchCount,
-        movieOfTheYear: mediaType === 'movie' && isMovieOfYear ? movieOfYear : null,
+        movieOfTheYear: mediaType === 'movie' && isMovieOfYear ? releaseYear : null,
         year: (movie.release_date || movie.first_air_date || '').slice(0, 4),
         genres: movie.genres?.map((g) => g.name) || [],
         tmdbRating: movie.vote_average,
@@ -228,31 +227,17 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
                 <div>
                   <ToggleOption
                     checked={isMovieOfYear}
-                    onChange={setIsMovieOfYear}
+                    onChange={releaseYear ? setIsMovieOfYear : undefined}
                     label="🏆 Movie of the Year"
-                    description="Mark as one of your contenders for a given year"
+                    description={
+                      releaseYear
+                        ? 'Mark as one of your contenders'
+                        : "Release year unknown — can't mark this title"
+                    }
                   />
-                  {isMovieOfYear && (
-                    <div style={{ marginTop: '0.5rem', marginLeft: '3rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <label style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>for year</label>
-                      <select
-                        value={movieOfYear}
-                        onChange={(e) => setMovieOfYear(Number(e.target.value))}
-                        style={{
-                          background: 'var(--color-bg-elevated)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: 'var(--radius-sm)',
-                          color: 'var(--color-text-primary)',
-                          padding: '0.35rem 0.6rem',
-                          fontSize: '0.82rem',
-                          cursor: 'pointer',
-                          outline: 'none',
-                        }}
-                      >
-                        {Array.from({ length: 15 }, (_, i) => currentYear - i).map((y) => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
-                      </select>
+                  {isMovieOfYear && releaseYear && (
+                    <div style={{ marginTop: '0.4rem', marginLeft: '3rem', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                      Automatically filed under its release year — <strong style={{ color: 'var(--color-accent)' }}>{releaseYear}</strong>
                     </div>
                   )}
                 </div>
@@ -315,7 +300,7 @@ function ToggleOption({ checked, onChange, label }) {
       color: 'var(--color-text-secondary)',
     }}>
       <div
-        onClick={() => onChange(!checked)}
+        onClick={() => onChange && onChange(!checked)}
         style={{
           width: '36px',
           height: '20px',
@@ -325,6 +310,8 @@ function ToggleOption({ checked, onChange, label }) {
           position: 'relative',
           transition: 'all 0.25s ease',
           flexShrink: 0,
+          opacity: onChange ? 1 : 0.4,
+          cursor: onChange ? 'pointer' : 'not-allowed',
         }}
       >
         <div style={{
