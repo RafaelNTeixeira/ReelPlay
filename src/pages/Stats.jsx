@@ -94,14 +94,19 @@ export default function Stats() {
     [reviews]
   );
 
-  const moviesOfTheYear = useMemo(() => {
-    return reviews
-      .filter((r) => r.mediaType === 'movie' && r.movieOfTheYear)
-      .sort((a, b) => b.movieOfTheYear - a.movieOfTheYear);
+  const motyGroups = useMemo(() => {
+    const contenders = reviews.filter((r) => r.mediaType === 'movie' && r.movieOfTheYear);
+    const byYear = {};
+    contenders.forEach((r) => {
+      (byYear[r.movieOfTheYear] ||= []).push(r);
+    });
+    return Object.entries(byYear)
+      .map(([year, movies]) => ({ year: Number(year), movies: movies.sort((a, b) => b.rating - a.rating) }))
+      .sort((a, b) => b.year - a.year);
   }, [reviews]);
   const nowYear = new Date().getFullYear();
-  const currentYearWinner = moviesOfTheYear.find((r) => r.movieOfTheYear === nowYear) || null;
-  const pastWinners = moviesOfTheYear.filter((r) => r.movieOfTheYear !== nowYear);
+  const currentYearGroup = motyGroups.find((g) => g.year === nowYear) || null;
+  const pastYearGroups = motyGroups.filter((g) => g.year !== nowYear);
 
   if (loading) {
     return (
@@ -218,10 +223,10 @@ export default function Stats() {
         )}
 
         {/* Movies of the Year (independent of the year selector above) */}
-        {moviesOfTheYear.length > 0 && (
-          <Section title="Movies of the Year" note="Films only">
-            {currentYearWinner ? (
-              <MovieOfYearHero review={currentYearWinner} year={nowYear} />
+        {motyGroups.length > 0 && (
+          <Section title="Movies of the Year" note="Films only · your shortlist of contenders per year">
+            {currentYearGroup ? (
+              <MovieOfYearGroup year={nowYear} movies={currentYearGroup.movies} featured />
             ) : (
               <div style={{
                 border: '1px dashed var(--color-border)',
@@ -230,22 +235,20 @@ export default function Stats() {
                 textAlign: 'center',
                 color: 'var(--color-text-muted)',
                 fontSize: '0.85rem',
-                marginBottom: pastWinners.length > 0 ? '1.5rem' : 0,
+                marginBottom: pastYearGroups.length > 0 ? '1.5rem' : 0,
               }}>
-                No {nowYear} Movie of the Year crowned yet.
+                No {nowYear} contenders marked yet.
               </div>
             )}
 
-            {pastWinners.length > 0 && (
-              <div style={{ marginTop: currentYearWinner ? '1.75rem' : 0 }}>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: '0.85rem' }}>
-                  Past Winners
+            {pastYearGroups.length > 0 && (
+              <div style={{ marginTop: currentYearGroup ? '2rem' : 0, display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  Past Years
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
-                  {pastWinners.map((r) => (
-                    <MovieOfYearTile key={r.id} review={r} />
-                  ))}
-                </div>
+                {pastYearGroups.map((g) => (
+                  <MovieOfYearGroup key={g.year} year={g.year} movies={g.movies} />
+                ))}
               </div>
             )}
           </Section>
@@ -383,47 +386,35 @@ function RewatchTile({ review }) {
   );
 }
 
-function MovieOfYearHero({ review, year }) {
-  const isFullUrl = review.posterPath?.startsWith('http');
-  const img = isFullUrl ? review.posterPath : (review.posterPath ? posterUrl(review.posterPath, 'lg') : null);
+function MovieOfYearGroup({ year, movies, featured }) {
   return (
-    <Link
-      to={`/movie/${review.tmdbId}`}
-      style={{
-        display: 'flex', gap: '1.5rem', alignItems: 'center', textDecoration: 'none',
-        background: 'linear-gradient(135deg, rgba(226,184,62,0.1) 0%, transparent 60%)',
-        border: '1px solid rgba(226,184,62,0.35)',
-        borderRadius: 'var(--radius-md)',
-        padding: '1.5rem',
-      }}
-    >
-      <div style={{ width: '90px', flexShrink: 0, aspectRatio: '2/3', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--color-bg-card)', boxShadow: '0 12px 30px rgba(0,0,0,0.5)' }}>
-        {img && <img src={img} alt={review.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+    <div style={{
+      background: featured ? 'linear-gradient(135deg, rgba(226,184,62,0.1) 0%, transparent 60%)' : 'transparent',
+      border: featured ? '1px solid rgba(226,184,62,0.35)' : '1px solid var(--color-border)',
+      borderRadius: 'var(--radius-md)',
+      padding: '1.5rem',
+    }}>
+      <div style={{ fontSize: featured ? '0.72rem' : '0.68rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#e2b83e', marginBottom: '1rem' }}>
+        🏆 {year} · {movies.length} contender{movies.length !== 1 ? 's' : ''}
       </div>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#e2b83e', marginBottom: '0.4rem' }}>
-          🏆 {year} Movie of the Year
-        </div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
-          {review.title}
-        </div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.3rem' }}>
-          {review.rating.toFixed(1)} ★{review.year ? ` · ${review.year}` : ''}
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${featured ? '130px' : '110px'}, 1fr))`, gap: '1rem' }}>
+        {movies.map((r) => (
+          <MovieOfYearTile key={r.id} review={r} large={featured} />
+        ))}
       </div>
-    </Link>
+    </div>
   );
 }
 
-function MovieOfYearTile({ review }) {
+function MovieOfYearTile({ review, large }) {
   const isFullUrl = review.posterPath?.startsWith('http');
-  const img = isFullUrl ? review.posterPath : (review.posterPath ? posterUrl(review.posterPath, 'sm') : null);
+  const img = isFullUrl ? review.posterPath : (review.posterPath ? posterUrl(review.posterPath, large ? 'md' : 'sm') : null);
   return (
     <Link to={`/movie/${review.tmdbId}`} style={{ textDecoration: 'none', display: 'block' }}>
-      <div style={{ aspectRatio: '2/3', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--color-bg-card)', position: 'relative', marginBottom: '0.5rem' }}>
+      <div style={{ aspectRatio: '2/3', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--color-bg-card)', position: 'relative', marginBottom: '0.5rem', boxShadow: large ? '0 12px 30px rgba(0,0,0,0.4)' : 'none' }}>
         {img && <img src={img} alt={review.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         <div style={{ position: 'absolute', bottom: '0.4rem', left: '0.4rem', background: 'rgba(7,7,15,0.8)', color: '#e2b83e', fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '2px' }}>
-          🏆 {review.movieOfTheYear}
+          {review.rating.toFixed(1)} ★
         </div>
       </div>
       <div style={{ fontSize: '0.82rem', color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{review.title}</div>

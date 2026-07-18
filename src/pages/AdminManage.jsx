@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { getReviews, updateReviewFlags, deleteReview, setMovieOfTheYear } from '../utils/storage';
+import { getReviews, updateReviewFlags, deleteReview } from '../utils/storage';
 import { posterUrl } from '../config';
 import { useAdmin } from '../context/AdminContext';
 
@@ -70,16 +70,6 @@ export default function AdminManage() {
 
   const applyToggle = (review, field) => applyField(review, field, !review[field]);
 
-  const applyMovieOfYear = async (review, year) => {
-    setError(null);
-    try {
-      await setMovieOfTheYear(review.tmdbId, year);
-      await load(); // reload: setting a year may also clear it from a previous holder
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   const bulkApply = async (field, value) => {
     setBusy(true);
     setError(null);
@@ -128,7 +118,7 @@ export default function AdminManage() {
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.4rem' }}>
             Edit rating, rewatch count, and Movie of the Year per title, or select multiple to update Recommended / Reviewer's Pick in bulk.
             For TV series, this is the overall series rating only — episode ratings are managed on the series page itself.
-            Only one movie can hold Movie of the Year per year — assigning it swaps it off the previous holder automatically.
+            Multiple movies can share the same Movie of the Year year — think of it as your shortlist of contenders, not a single winner.
           </p>
         </div>
 
@@ -295,7 +285,7 @@ export default function AdminManage() {
                   </div>
                   <div style={{ width: '150px', textAlign: 'center' }}>
                     {r.mediaType === 'movie' ? (
-                      <MovieOfYearCell review={r} onSave={(y) => applyMovieOfYear(r, y)} />
+                      <MovieOfYearCell review={r} onSave={(y) => applyField(r, 'movieOfTheYear', y)} />
                     ) : (
                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem' }}>—</span>
                     )}

@@ -210,29 +210,6 @@ export const updateReviewFlags = async (tmdbId, mediaType, patch) => {
   return upsertRow(id, review);
 };
 
-// -- Movie of the Year (movies only, one movie per year) ---
-// Setting a year on a movie automatically clears it from whichever other
-// movie currently holds that year, so there's never more than one winner.
-export const setMovieOfTheYear = async (tmdbId, year) => {
-  const mediaType = 'movie';
-  const existing = await getReview(tmdbId, mediaType);
-  if (!existing) throw new Error('Review not found — write an overall review first.');
-
-  if (year != null) {
-    const all = await getReviews();
-    const previousHolder = all.find(
-      (r) => r.mediaType === 'movie' && r.movieOfTheYear === year && r.tmdbId !== tmdbId
-    );
-    if (previousHolder) {
-      await upsertRow(previousHolder.id, { ...previousHolder, movieOfTheYear: null, updatedAt: new Date().toISOString() });
-    }
-  }
-
-  const id = `${tmdbId}-${mediaType}`;
-  const review = { ...existing, movieOfTheYear: year, updatedAt: new Date().toISOString() };
-  return upsertRow(id, review);
-};
-
 export const deleteReview = async (tmdbId, mediaType) => {
   const client = db();
   if (client) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { saveReview, removeFromWatchlist, setMovieOfTheYear } from '../utils/storage';
+import { saveReview, removeFromWatchlist } from '../utils/storage';
 import StarRating from './StarRating';
 
 export default function ReviewForm({ movie, mediaType, existingReview, onSave, onCancel, overridePosterUrl, overrideBackdropUrl }) {
@@ -44,21 +44,15 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         containsSpoilers: spoilers,
         reviewerPick,
         rewatchCount,
+        movieOfTheYear: mediaType === 'movie' && isMovieOfYear ? movieOfYear : null,
         year: (movie.release_date || movie.first_air_date || '').slice(0, 4),
         genres: movie.genres?.map((g) => g.name) || [],
         tmdbRating: movie.vote_average,
         runtime: movie.runtime || movie.episode_run_time?.[0] || null,
         director: movie.credits?.crew?.find((c) => c.job === 'Director')?.name || null,
       });
-      let finalSaved = saved;
-      if (mediaType === 'movie') {
-        const desiredYear = isMovieOfYear ? movieOfYear : null;
-        if (desiredYear !== (existingReview?.movieOfTheYear ?? null)) {
-          finalSaved = await setMovieOfTheYear(movie.id, desiredYear);
-        }
-      }
       removeFromWatchlist(movie.id, mediaType).catch(() => {}); // best-effort, don't block on this
-      onSave(finalSaved);
+      onSave(saved);
     } catch (err) {
       console.error(err);
       setSaveError(err.message || 'Something went wrong while saving.');
@@ -236,7 +230,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
                     checked={isMovieOfYear}
                     onChange={setIsMovieOfYear}
                     label="🏆 Movie of the Year"
-                    description="Crown this as your pick for a given year"
+                    description="Mark as one of your contenders for a given year"
                   />
                   {isMovieOfYear && (
                     <div style={{ marginTop: '0.5rem', marginLeft: '3rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
