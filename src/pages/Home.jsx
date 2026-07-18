@@ -45,6 +45,7 @@ export default function Home() {
     if (filter === 'tv')    return r.mediaType === 'tv';
     if (filter === 'game')  return r.mediaType === 'game';
     if (filter === 'pick')  return r.reviewerPick === true;
+    if (filter === 'moty')  return r.mediaType === 'movie' && r.movieOfTheYear != null;
     return true;
   });
 
@@ -57,12 +58,21 @@ export default function Home() {
 
   // Publish years available given the current type/pick filter — this is the title's
   // official release year (r.year), NOT the date it was reviewed/watched.
-  const availableYears = [...new Set(typeFiltered.map((r) => r.year).filter(Boolean))]
-    .sort((a, b) => b.localeCompare(a));
+  // Exception: under the "Movie of the Year" filter, the year facet switches to the
+  // crowned year (movieOfTheYear) instead, since that's what's meaningful there.
+  const availableYears = filter === 'moty'
+    ? [...new Set(typeFiltered.map((r) => r.movieOfTheYear).filter(Boolean))]
+        .sort((a, b) => b - a)
+        .map(String)
+    : [...new Set(typeFiltered.map((r) => r.year).filter(Boolean))]
+        .sort((a, b) => b.localeCompare(a));
 
   const filtered = typeFiltered
     .filter((r) => !activeGenre || (r.genres || []).includes(activeGenre))
-    .filter((r) => !activeYear || r.year === activeYear)
+    .filter((r) => {
+      if (!activeYear) return true;
+      return filter === 'moty' ? r.movieOfTheYear === Number(activeYear) : r.year === activeYear;
+    })
     .sort((a, b) => {
       if (sortBy === 'rating')    return (b.rating || 0) - (a.rating || 0);
       if (sortBy === 'title')     return a.title.localeCompare(b.title);
@@ -74,7 +84,10 @@ export default function Home() {
     const next = {};
     if (value !== 'all') next.type = value;
     if (activeGenre) next.genre = activeGenre;
-    if (activeYear) next.year = activeYear;
+    // Year means something different under MOTY (crowned year) vs elsewhere (release
+    // year) — don't carry a stale selection across that boundary.
+    const yearAxisChanged = (value === 'moty') !== (filter === 'moty');
+    if (activeYear && !yearAxisChanged) next.year = activeYear;
     setSearchParams(next);
   };
 
@@ -146,6 +159,7 @@ export default function Home() {
               { label: '⬛ Series', value: 'tv',    color: '#78b4c8' },
               { label: '🎮 Games', value: 'game',  color: 'var(--color-game)' },
               { label: '⭐ Picks',  value: 'pick',  color: '#e2a84b' },
+              { label: '🏆 Movie of the Year', value: 'moty', color: '#e2b83e' },
             ].map(({ label, value, color }) => {
               const active = filter === value;
               return (
@@ -169,11 +183,13 @@ export default function Home() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             {availableYears.length > 0 && (
               <>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>Year:</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  {filter === 'moty' ? 'Crowned Year:' : 'Year:'}
+                </span>
                 <select
                   value={activeYear || ''}
                   onChange={(e) => setYear(e.target.value)}
-                  title="Filter by official release year"
+                  title={filter === 'moty' ? 'Filter by the year this movie was crowned' : 'Filter by official release year'}
                   style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-sm)', padding: '0.38rem 0.7rem', fontSize: '0.78rem', cursor: 'pointer', outline: 'none' }}
                 >
                   <option value="">All Years</option>
@@ -391,8 +407,12 @@ function EmptyState({ filter, activeGenre, activeYear, hasAny }) {
             : activeGenre
               ? `Nothing tagged "${activeGenre}" here yet.`
               : activeYear
-                ? `Nothing released in ${activeYear} here yet.`
-                : 'Try a different filter.'
+                ? filter === 'moty'
+                  ? `No Movie of the Year crowned for ${activeYear}.`
+                  : `Nothing released in ${activeYear} here yet.`
+                : filter === 'moty'
+                  ? 'No movies have been crowned Movie of the Year yet.'
+                  : 'Try a different filter.'
           : 'Log in as admin to start adding reviews.'}
       </p>
     </div>
