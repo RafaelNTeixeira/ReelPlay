@@ -27,6 +27,7 @@ const fromDb = (row) => ({
   reviewerPick: row.reviewer_pick ?? false,
   episodeRatings: row.episode_ratings || {},
   rewatchCount: row.rewatch_count ?? 0,
+  movieOfTheYear: row.movie_of_the_year ?? null,
   year: row.year,
   genres: row.genres || [],
   tmdbRating: row.tmdb_rating,
@@ -52,6 +53,7 @@ const toDb = (r) => ({
   reviewer_pick: r.reviewerPick ?? false,
   episode_ratings: r.episodeRatings ?? {},
   rewatch_count: r.rewatchCount ?? 0,
+  movie_of_the_year: r.movieOfTheYear ?? null,
   year: r.year,
   genres: r.genres,
   tmdb_rating: r.tmdbRating,
@@ -128,6 +130,7 @@ export const saveReview = async (reviewData) => {
 
   const review = {
     episodeRatings: existing?.episodeRatings || {},
+    movieOfTheYear: existing?.movieOfTheYear ?? null,
     ...reviewData,
     id,
     updatedAt: now,
@@ -204,6 +207,29 @@ export const updateReviewFlags = async (tmdbId, mediaType, patch) => {
   const existing = await getReview(tmdbId, mediaType);
   if (!existing) throw new Error('Review not found — write an overall review first.');
   const review = { ...existing, ...patch, updatedAt: new Date().toISOString() };
+  return upsertRow(id, review);
+};
+
+// -- Movie of the Year (movies only, one movie per year) ---
+// Setting a year on a movie automatically clears it from whichever other
+// movie currently holds that year, so there's never more than one winner.
+export const setMovieOfTheYear = async (tmdbId, year) => {
+  const mediaType = 'movie';
+  const existing = await getReview(tmdbId, mediaType);
+  if (!existing) throw new Error('Review not found — write an overall review first.');
+
+  if (year != null) {
+    const all = await getReviews();
+    const previousHolder = all.find(
+      (r) => r.mediaType === 'movie' && r.movieOfTheYear === year && r.tmdbId !== tmdbId
+    );
+    if (previousHolder) {
+      await upsertRow(previousHolder.id, { ...previousHolder, movieOfTheYear: null, updatedAt: new Date().toISOString() });
+    }
+  }
+
+  const id = `${tmdbId}-${mediaType}`;
+  const review = { ...existing, movieOfTheYear: year, updatedAt: new Date().toISOString() };
   return upsertRow(id, review);
 };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { getReviews, updateReviewFlags, deleteReview } from '../utils/storage';
+import { getReviews, updateReviewFlags, deleteReview, setMovieOfTheYear } from '../utils/storage';
 import { posterUrl } from '../config';
 import { useAdmin } from '../context/AdminContext';
 
@@ -70,6 +70,16 @@ export default function AdminManage() {
 
   const applyToggle = (review, field) => applyField(review, field, !review[field]);
 
+  const applyMovieOfYear = async (review, year) => {
+    setError(null);
+    try {
+      await setMovieOfTheYear(review.tmdbId, year);
+      await load(); // reload: setting a year may also clear it from a previous holder
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const bulkApply = async (field, value) => {
     setBusy(true);
     setError(null);
@@ -116,8 +126,9 @@ export default function AdminManage() {
             Manage Reviews
           </h1>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.4rem' }}>
-            Edit rating and rewatch count per title, or select multiple to update Recommended / Reviewer's Pick in bulk.
+            Edit rating, rewatch count, and Movie of the Year per title, or select multiple to update Recommended / Reviewer's Pick in bulk.
             For TV series, this is the overall series rating only — episode ratings are managed on the series page itself.
+            Only one movie can hold Movie of the Year per year — assigning it swaps it off the previous holder automatically.
           </p>
         </div>
 
@@ -244,6 +255,7 @@ export default function AdminManage() {
               <span style={{ width: '90px', textAlign: 'center' }}>Rewatches</span>
               <span style={{ width: '90px', textAlign: 'center' }}>Recommended</span>
               <span style={{ width: '110px', textAlign: 'center' }}>Reviewer's Pick</span>
+              <span style={{ width: '150px', textAlign: 'center' }}>Movie of the Year</span>
               <span style={{ width: '50px' }} />
             </div>
 
@@ -280,6 +292,13 @@ export default function AdminManage() {
                   </div>
                   <div style={{ width: '110px', textAlign: 'center' }}>
                     <input type="checkbox" checked={!!r.reviewerPick} onChange={() => applyToggle(r, 'reviewerPick')} />
+                  </div>
+                  <div style={{ width: '150px', textAlign: 'center' }}>
+                    {r.mediaType === 'movie' ? (
+                      <MovieOfYearCell review={r} onSave={(y) => applyMovieOfYear(r, y)} />
+                    ) : (
+                      <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem' }}>—</span>
+                    )}
                   </div>
                   <Link to={`/${r.mediaType}/${r.tmdbId}`} style={{ width: '50px', fontSize: '0.72rem', color: 'var(--color-accent)', textAlign: 'right' }}>
                     View
@@ -353,5 +372,35 @@ function RewatchCell({ review, onSave }) {
         +
       </button>
     </div>
+  );
+}
+
+function MovieOfYearCell({ review, onSave }) {
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 15 }, (_, i) => currentYear - i);
+  const value = review.movieOfTheYear ?? '';
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => onSave(e.target.value === '' ? null : Number(e.target.value))}
+      style={{
+        background: value ? 'rgba(226,184,62,0.14)' : 'var(--color-bg-elevated)',
+        border: `1px solid ${value ? '#e2b83e' : 'var(--color-border)'}`,
+        borderRadius: 'var(--radius-sm)',
+        color: value ? '#e2b83e' : 'var(--color-text-secondary)',
+        fontSize: '0.78rem',
+        fontWeight: value ? 700 : 400,
+        padding: '0.3rem 0.5rem',
+        cursor: 'pointer',
+        outline: 'none',
+        width: '100%',
+      }}
+    >
+      <option value="">— None —</option>
+      {years.map((y) => (
+        <option key={y} value={y}>🏆 {y}</option>
+      ))}
+    </select>
   );
 }

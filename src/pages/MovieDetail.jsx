@@ -8,7 +8,7 @@ import {
   formatMoney,
   getContentRating,
 } from '../utils/tmdb';
-import { getReview, saveReview, deleteReview } from '../utils/storage';
+import { getReview, saveReview, deleteReview, logRewatch } from '../utils/storage';
 import { posterUrl, backdropUrl, profileUrl } from '../config';
 import { useAdmin } from '../context/AdminContext';
 import { useTheme } from '../context/ThemeContext';
@@ -92,6 +92,15 @@ export default function MovieDetail({ mediaType }) {
     } catch (err) {
       alert(err.message || 'Failed to delete review.');
       setConfirmDelete(false);
+    }
+  };
+
+  const handleLogRewatch = async () => {
+    try {
+      const saved = await logRewatch(Number(id), mediaType);
+      setReview(saved);
+    } catch (err) {
+      alert(err.message || 'Failed to log rewatch.');
     }
   };
 
@@ -372,6 +381,11 @@ export default function MovieDetail({ mediaType }) {
                   >
                     {review ? '✎ Edit Review' : '+ Write Review'}
                   </button>
+                  {review && review.rating > 0 && (
+                    <button className="btn btn-ghost" onClick={handleLogRewatch} title="Log another watch">
+                      🔁 Log Rewatch
+                    </button>
+                  )}
                   {review && (
                     <button
                       className={`btn ${confirmDelete ? 'btn-danger' : 'btn-ghost'}`}
@@ -526,6 +540,19 @@ function ReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readingTim
                 ★ REVIEWER'S PICK
               </span>
             )}
+            {review.mediaType === 'movie' && review.movieOfTheYear && (
+              <span style={{
+                background: '#e2b83e',
+                color: '#07070f',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                padding: '0.15rem 0.4rem',
+                borderRadius: '2px',
+              }}>
+                🏆 {review.movieOfTheYear} MOVIE OF THE YEAR
+              </span>
+            )}
           </div>
           <StarRating value={review.rating} readOnly size={22} showValue />
           <div style={{
@@ -565,6 +592,11 @@ function ReviewDisplay({ review, spoilerRevealed, setSpoilerRevealed, readingTim
               Watched {new Date(review.watchedDate).toLocaleDateString('en-US', {
                 month: 'long', day: 'numeric', year: 'numeric'
               })}
+            </div>
+          )}
+          {review.rewatchCount > 0 && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--color-accent)', marginTop: '0.2rem' }}>
+              🔁 Watched {review.rewatchCount + 1}× total
             </div>
           )}
           {wordCount > 0 && (

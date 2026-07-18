@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { saveReview, removeFromWatchlist } from '../utils/storage';
+import { saveReview, removeFromWatchlist, setMovieOfTheYear } from '../utils/storage';
 import StarRating from './StarRating';
 
 export default function ReviewForm({ movie, mediaType, existingReview, onSave, onCancel, overridePosterUrl, overrideBackdropUrl }) {
@@ -13,6 +13,9 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
   const [spoilers, setSpoilers] = useState(existingReview?.containsSpoilers ?? false);
   const [reviewerPick, setReviewerPick] = useState(existingReview?.reviewerPick ?? false);
   const [rewatchCount, setRewatchCount] = useState(existingReview?.rewatchCount ?? 0);
+  const currentYear = new Date().getFullYear();
+  const [isMovieOfYear, setIsMovieOfYear] = useState(existingReview?.movieOfTheYear != null);
+  const [movieOfYear, setMovieOfYear] = useState(existingReview?.movieOfTheYear ?? currentYear);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -47,8 +50,15 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         runtime: movie.runtime || movie.episode_run_time?.[0] || null,
         director: movie.credits?.crew?.find((c) => c.job === 'Director')?.name || null,
       });
+      let finalSaved = saved;
+      if (mediaType === 'movie') {
+        const desiredYear = isMovieOfYear ? movieOfYear : null;
+        if (desiredYear !== (existingReview?.movieOfTheYear ?? null)) {
+          finalSaved = await setMovieOfTheYear(movie.id, desiredYear);
+        }
+      }
       removeFromWatchlist(movie.id, mediaType).catch(() => {}); // best-effort, don't block on this
-      onSave(saved);
+      onSave(finalSaved);
     } catch (err) {
       console.error(err);
       setSaveError(err.message || 'Something went wrong while saving.');
@@ -220,6 +230,39 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
                 label="⭐ Reviewer's Pick"
                 description="Feature this as an all-time favorite"
               />
+              {mediaType === 'movie' && (
+                <div>
+                  <ToggleOption
+                    checked={isMovieOfYear}
+                    onChange={setIsMovieOfYear}
+                    label="🏆 Movie of the Year"
+                    description="Crown this as your pick for a given year"
+                  />
+                  {isMovieOfYear && (
+                    <div style={{ marginTop: '0.5rem', marginLeft: '3rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <label style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>for year</label>
+                      <select
+                        value={movieOfYear}
+                        onChange={(e) => setMovieOfYear(Number(e.target.value))}
+                        style={{
+                          background: 'var(--color-bg-elevated)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          color: 'var(--color-text-primary)',
+                          padding: '0.35rem 0.6rem',
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          outline: 'none',
+                        }}
+                      >
+                        {Array.from({ length: 15 }, (_, i) => currentYear - i).map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -62,11 +62,18 @@ function CinemaCard({ review, imgSrc, isTv, index, navigate }) {
           </span>
         </div>
 
-        {review.reviewerPick && (
-          <div style={{ position: 'absolute', top: '0.65rem', right: '0.65rem', background: 'var(--color-cinema)', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            ★ Reviewer's Pick
-          </div>
-        )}
+        <div style={{ position: 'absolute', top: '0.65rem', right: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-end' }}>
+          {review.mediaType === 'movie' && review.movieOfTheYear && (
+            <div style={{ background: '#e2b83e', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+              🏆 {review.movieOfTheYear} Movie of the Year
+            </div>
+          )}
+          {review.reviewerPick && (
+            <div style={{ background: 'var(--color-cinema)', color: '#07070f', padding: '0.18rem 0.4rem', borderRadius: '2px', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              ★ Reviewer's Pick
+            </div>
+          )}
+        </div>
         {review.recommended && (
           <div style={{ position: 'absolute', bottom: '0.65rem', right: '0.65rem' }}>
             <span title="Recommended" style={{ fontSize: '1.1rem' }}>💚</span>
