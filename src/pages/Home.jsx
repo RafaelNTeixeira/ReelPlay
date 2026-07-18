@@ -14,6 +14,7 @@ export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.get('type') || 'all';
   const activeGenre = searchParams.get('genre') || null;
+  const activeYear = searchParams.get('year') || null;
   const [sortBy, setSortBy] = useState('latest');
   const [visibleAll, setVisibleAll] = useState(PAGE_SIZE);
   const [visibleCinema, setVisibleCinema] = useState(PAGE_SIZE);
@@ -24,7 +25,7 @@ export default function Home() {
     setVisibleAll(PAGE_SIZE);
     setVisibleCinema(PAGE_SIZE);
     setVisibleGames(PAGE_SIZE);
-  }, [filter, activeGenre, sortBy]);
+  }, [filter, activeGenre, activeYear, sortBy]);
 
   useEffect(() => {
     const load = async () => {
@@ -54,8 +55,14 @@ export default function Home() {
   });
   const availableGenres = Object.keys(genreCounts).sort((a, b) => genreCounts[b] - genreCounts[a] || a.localeCompare(b));
 
+  // Publish years available given the current type/pick filter — this is the title's
+  // official release year (r.year), NOT the date it was reviewed/watched.
+  const availableYears = [...new Set(typeFiltered.map((r) => r.year).filter(Boolean))]
+    .sort((a, b) => b.localeCompare(a));
+
   const filtered = typeFiltered
     .filter((r) => !activeGenre || (r.genres || []).includes(activeGenre))
+    .filter((r) => !activeYear || r.year === activeYear)
     .sort((a, b) => {
       if (sortBy === 'rating')    return (b.rating || 0) - (a.rating || 0);
       if (sortBy === 'title')     return a.title.localeCompare(b.title);
@@ -67,13 +74,23 @@ export default function Home() {
     const next = {};
     if (value !== 'all') next.type = value;
     if (activeGenre) next.genre = activeGenre;
+    if (activeYear) next.year = activeYear;
     setSearchParams(next);
   };
 
   const setGenre = (genre) => {
     const next = {};
     if (filter !== 'all') next.type = filter;
+    if (activeYear) next.year = activeYear;
     if (genre !== activeGenre) next.genre = genre;
+    setSearchParams(next);
+  };
+
+  const setYear = (year) => {
+    const next = {};
+    if (filter !== 'all') next.type = filter;
+    if (activeGenre) next.genre = activeGenre;
+    if (year) next.year = year;
     setSearchParams(next);
   };
 
@@ -149,7 +166,23 @@ export default function Home() {
               );
             })}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            {availableYears.length > 0 && (
+              <>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>Year:</span>
+                <select
+                  value={activeYear || ''}
+                  onChange={(e) => setYear(e.target.value)}
+                  title="Filter by official release year"
+                  style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-sm)', padding: '0.38rem 0.7rem', fontSize: '0.78rem', cursor: 'pointer', outline: 'none' }}
+                >
+                  <option value="">All Years</option>
+                  {availableYears.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </>
+            )}
             <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>Sort:</span>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-sm)', padding: '0.38rem 0.7rem', fontSize: '0.78rem', cursor: 'pointer', outline: 'none' }}>
               <option value="latest">Latest</option>
@@ -220,7 +253,7 @@ export default function Home() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState filter={filter} activeGenre={activeGenre} hasAny={reviews.length > 0} />
+          <EmptyState filter={filter} activeGenre={activeGenre} activeYear={activeYear} hasAny={reviews.length > 0} />
         ) : showSections ? (
           /* Split sections when showing all with mixed content */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
@@ -343,7 +376,7 @@ function LoadMoreButton({ onClick, remaining }) {
   );
 }
 
-function EmptyState({ filter, activeGenre, hasAny }) {
+function EmptyState({ filter, activeGenre, activeYear, hasAny }) {
   const isGame = filter === 'game';
   return (
     <div style={{ textAlign: 'center', padding: '6rem 2rem', color: 'var(--color-text-muted)' }}>
@@ -353,7 +386,13 @@ function EmptyState({ filter, activeGenre, hasAny }) {
       </h3>
       <p style={{ fontSize: '0.88rem' }}>
         {hasAny
-          ? activeGenre ? `Nothing tagged "${activeGenre}" here yet.` : 'Try a different filter.'
+          ? activeGenre && activeYear
+            ? `Nothing tagged "${activeGenre}" from ${activeYear}.`
+            : activeGenre
+              ? `Nothing tagged "${activeGenre}" here yet.`
+              : activeYear
+                ? `Nothing released in ${activeYear} here yet.`
+                : 'Try a different filter.'
           : 'Log in as admin to start adding reviews.'}
       </p>
     </div>

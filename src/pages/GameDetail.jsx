@@ -559,6 +559,7 @@ export default function GameDetail() {
                     poster_path: null,
                     backdrop_path: null,
                     genres: game.genres || [],
+                    release_date: game.released,
                     _gameImageUrl: game.background_image,
                   }}
                   mediaType="game"
