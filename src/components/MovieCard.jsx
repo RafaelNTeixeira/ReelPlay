@@ -1,27 +1,26 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { posterUrl } from '../config';
 import StarRating from './StarRating';
 
 export default function MovieCard({ review, index = 0 }) {
-  const navigate = useNavigate();
   const isGame = review.mediaType === 'game';
   const isTv   = review.mediaType === 'tv';
   const isFullUrl = review.posterPath?.startsWith('http');
   const imgSrc = isFullUrl ? review.posterPath : (review.posterPath ? posterUrl(review.posterPath, 'md') : null);
 
   return isGame
-    ? <GameCard review={review} imgSrc={imgSrc} index={index} navigate={navigate} />
-    : <CinemaCard review={review} imgSrc={imgSrc} isTv={isTv} index={index} navigate={navigate} />;
+    ? <GameCard review={review} imgSrc={imgSrc} index={index} />
+    : <CinemaCard review={review} imgSrc={imgSrc} isTv={isTv} index={index} />;
 }
 
 /* -- Cinema / TV Card --------------------------------------- */
-function CinemaCard({ review, imgSrc, isTv, index, navigate }) {
+function CinemaCard({ review, imgSrc, isTv, index }) {
   const ratingColor = review.rating >= 4 ? 'var(--color-cinema)' : review.rating >= 3 ? '#78b4a0' : '#c07070';
   return (
-    <div
-      onClick={() => navigate(`/${review.mediaType}/${review.tmdbId}`)}
+    <Link
+      to={`/${review.mediaType}/${review.tmdbId}`}
       className="card card-cinema"
-      style={{ cursor: 'pointer', animation: 'fadeInUp 0.5s ease both', animationDelay: `${index * 0.055}s` }}
+      style={{ display: 'block', textDecoration: 'none', cursor: 'pointer', animation: 'fadeInUp 0.5s ease both', animationDelay: `${index * 0.055}s` }}
     >
       {/* Poster */}
       <div style={{ position: 'relative', aspectRatio: '2/3', overflow: 'hidden' }}>
@@ -112,20 +111,20 @@ function CinemaCard({ review, imgSrc, isTv, index, navigate }) {
           </p>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
 
 /* -- Game Card ---------------------------------------------- */
-function GameCard({ review, imgSrc, index, navigate }) {
+function GameCard({ review, imgSrc, index }) {
   const ratingColor = review.rating >= 4 ? 'var(--color-game)' : review.rating >= 3 ? '#78b4a0' : '#c07070';
   const platforms = review.genres?.slice(0, 3) || [];
 
   return (
-    <div
-      onClick={() => navigate(`/game/${review.tmdbId}`)}
+    <Link
+      to={`/game/${review.tmdbId}`}
       className="card card-game"
-      style={{ cursor: 'pointer', animation: 'fadeInUp 0.5s ease both', animationDelay: `${index * 0.055}s` }}
+      style={{ display: 'block', textDecoration: 'none', cursor: 'pointer', animation: 'fadeInUp 0.5s ease both', animationDelay: `${index * 0.055}s` }}
     >
       {/* 16:9 image section */}
       <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}>
@@ -232,6 +231,6 @@ function GameCard({ review, imgSrc, index, navigate }) {
           </p>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

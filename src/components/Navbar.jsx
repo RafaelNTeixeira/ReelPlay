@@ -169,9 +169,6 @@ export default function Navbar() {
 
           {isAdmin ? (
             <>
-              <button onClick={() => setSearchOpen(true)} className="btn btn-primary" style={{ fontSize: '0.73rem', padding: '0.5rem 1rem' }}>
-                + Add Review
-              </button>
               <Link to="/admin/manage" className="btn btn-ghost" style={{ fontSize: '0.73rem', padding: '0.5rem 1rem' }}>
                 ⚙ Manage
               </Link>

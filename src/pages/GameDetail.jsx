@@ -361,7 +361,7 @@ export default function GameDetail() {
         <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '3rem', alignItems: 'start' }}>
 
           {/* ── LEFT COLUMN ── */}
-          <div style={{ marginTop: '-80px' }}>
+          <div style={{ marginTop: '-24px' }}>
             {/* Cover art */}
             <div style={{
               borderRadius: 'var(--radius-md)',
