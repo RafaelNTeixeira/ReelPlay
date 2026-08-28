@@ -66,7 +66,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
         background: 'var(--color-bg-elevated)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-md)',
-        padding: '2rem',
+        padding: 'clamp(1.25rem, 4vw, 2rem)',
         animation: 'fadeInUp 0.3s ease',
       }}
     >
@@ -172,7 +172,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
 
           <div className="form-group">
             <label className="form-label">🔁 Rewatches</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => setRewatchCount((c) => Math.max(0, c - 1))}
@@ -236,7 +236,7 @@ export default function ReviewForm({ movie, mediaType, existingReview, onSave, o
                     }
                   />
                   {isMovieOfYear && releaseYear && (
-                    <div style={{ marginTop: '0.4rem', marginLeft: '3rem', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                    <div style={{ marginTop: '0.4rem', marginLeft: 'clamp(1rem, 6vw, 3rem)', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
                       Automatically filed under its release year — <strong style={{ color: 'var(--color-accent)' }}>{releaseYear}</strong>
                     </div>
                   )}

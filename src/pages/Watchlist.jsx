@@ -76,7 +76,7 @@ export default function Watchlist() {
 
   return (
     <div style={{ paddingTop: 'var(--navbar-height)', paddingBottom: '5rem' }}>
-      <div className="page-container" style={{ padding: '2.5rem 2rem 0' }}>
+      <div className="page-container" style={{ padding: '2.5rem clamp(1rem, 4vw, 2rem) 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>
             <span style={{ fontFamily: 'var(--font-label)', fontSize: '0.68rem', letterSpacing: '0.2em', color: 'var(--color-accent)' }}>

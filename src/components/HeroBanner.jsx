@@ -189,11 +189,13 @@ export default function HeroBanner({ videoId, backdropPath, title, onTheaterMode
       {videoId && (
         <div style={{
           position: 'absolute',
-          bottom: '1.5rem',
-          right: '1.5rem',
+          bottom: 'clamp(0.85rem, 3vw, 1.5rem)',
+          right: 'clamp(0.85rem, 3vw, 1.5rem)',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+          gap: '0.6rem',
           zIndex: 10,
         }}>
           {/* Theater Mode */}
@@ -301,8 +303,8 @@ export default function HeroBanner({ videoId, backdropPath, title, onTheaterMode
       {!videoId && (
         <div style={{
           position: 'absolute',
-          bottom: '1.5rem',
-          right: '1.5rem',
+          bottom: 'clamp(0.85rem, 3vw, 1.5rem)',
+          right: 'clamp(0.85rem, 3vw, 1.5rem)',
           zIndex: 10,
           fontSize: '0.72rem',
           color: 'rgba(255,255,255,0.3)',

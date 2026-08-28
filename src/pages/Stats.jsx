@@ -134,7 +134,7 @@ export default function Stats() {
       <div style={{
         background: 'radial-gradient(ellipse at 20% 0%, rgba(226,168,75,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 0%, rgba(129,140,248,0.08) 0%, transparent 50%), var(--color-bg)',
         borderBottom: '1px solid var(--color-border)',
-        padding: '3.5rem 2rem 2.5rem',
+        padding: '3.5rem clamp(1rem, 4vw, 2rem) 2.5rem',
       }}>
         <div className="page-container">
           <span style={{ fontFamily: 'var(--font-label)', fontSize: '0.7rem', letterSpacing: '0.22em', color: 'var(--color-accent)' }}>
@@ -155,7 +155,7 @@ export default function Stats() {
         </div>
       </div>
 
-      <div className="page-container" style={{ padding: '3rem 2rem 0' }}>
+      <div className="page-container" style={{ padding: '3rem clamp(1rem, 4vw, 2rem) 0' }}>
 
         {/* Year selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>

@@ -409,7 +409,64 @@ button { cursor: pointer; border: none; background: none; font-family: var(--fon
 .delay-5 { animation-delay: 0.5s; }
 
 /* ============ RESPONSIVE ============ */
+
+/* -- Navbar: desktop nav links/actions vs mobile hamburger menu -- */
+.navbar-links, .navbar-actions { display: flex; }
+.navbar-hamburger { display: none; }
+.navbar-mobile-panel { display: none; }
+
+/* -- Detail pages (movie/tv/game): 280px-poster + content grid -- */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.overlap-poster-movie { margin-top: -120px; }
+.overlap-poster-game { margin-top: -24px; }
+.overlap-poster-game-skeleton { margin-top: -80px; }
+
+@media (max-width: 900px) {
+  .navbar-links, .navbar-actions { display: none; }
+  .navbar-hamburger { display: flex; }
+  .navbar-mobile-panel.open { display: flex; }
+}
+
+@media (max-width: 420px) {
+  .navbar-tagline { display: none; }
+}
+
+@media (max-width: 860px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .overlap-poster-movie,
+  .overlap-poster-game,
+  .overlap-poster-game-skeleton {
+    margin-top: 0;
+    max-width: 220px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .page-container { padding: 0 1rem; }
   .btn { padding: 0.55rem 1.1rem; font-size: 0.78rem; }
+
+  h1 { font-size: clamp(1.7rem, 8vw, 2.6rem); }
+  h2 { font-size: clamp(1.3rem, 6vw, 1.9rem); }
+
+  /* Admin table: scroll horizontally instead of squishing columns unreadable */
+  .admin-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table-inner { min-width: 640px; }
+}
+
+@media (max-width: 480px) {
+  .page-container { padding: 0 0.85rem; }
+  .overlay-backdrop { padding: 0 1rem; }
 }

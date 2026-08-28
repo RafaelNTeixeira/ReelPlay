@@ -91,7 +91,7 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
     }}>
       {/* Header */}
       <div style={{
-        padding: '1.25rem 1.5rem',
+        padding: '1.25rem clamp(0.85rem, 4vw, 1.5rem)',
         borderBottom: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
@@ -118,7 +118,7 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
       </div>
 
       {/* Season tabs */}
-      <div className="scroll-row" style={{ padding: '1rem 1.5rem 0', gap: '0.5rem' }}>
+      <div className="scroll-row" style={{ padding: '1rem clamp(0.85rem, 4vw, 1.5rem) 0', gap: '0.5rem' }}>
         {validSeasons.map((s) => {
           const active = s.season_number === activeSeason;
           const label = s.season_number === 0 ? 'Specials' : `Season ${s.season_number}`;
@@ -148,7 +148,7 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
       </div>
 
       {/* Episode list */}
-      <div style={{ padding: '1.25rem 1.5rem 1.5rem' }}>
+      <div style={{ padding: 'clamp(0.85rem, 4vw, 1.25rem) clamp(0.85rem, 4vw, 1.5rem) 1.5rem' }}>
         {error && (
           <div style={{ color: '#e05555', fontSize: '0.82rem', marginBottom: '0.75rem' }}>⚠ {error}</div>
         )}
@@ -172,7 +172,7 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem',
+                    gap: 'clamp(0.5rem, 2vw, 1rem)',
                     padding: '0.6rem',
                     borderRadius: 'var(--radius-sm)',
                     background: 'var(--color-bg-elevated)',
@@ -182,7 +182,7 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
                   }}
                 >
                   <div style={{
-                    width: '96px',
+                    width: 'clamp(64px, 22vw, 96px)',
                     aspectRatio: '16/9',
                     borderRadius: '3px',
                     overflow: 'hidden',
@@ -230,7 +230,7 @@ export default function EpisodeRatings({ tmdbId, seasons, episodeRatings, isAdmi
                         handleRate(activeSeason, ep.episode_number, whole === current ? 0 : whole);
                       } : undefined}
                       max={5}
-                      size={16}
+                      size={14}
                       readOnly={!isAdmin}
                     />
                   </div>

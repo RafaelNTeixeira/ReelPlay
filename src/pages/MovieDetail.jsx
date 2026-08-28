@@ -164,7 +164,7 @@ export default function MovieDetail({ mediaType }) {
           style={{
             position: 'absolute',
             top: 'calc(var(--navbar-height) + 1rem)',
-            left: '2rem',
+            left: 'clamp(1rem, 4vw, 2rem)',
             zIndex: 10,
             background: 'rgba(7,7,15,0.75)',
             border: '1px solid rgba(255,255,255,0.15)',
@@ -190,11 +190,11 @@ export default function MovieDetail({ mediaType }) {
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className="page-container" style={{ padding: '0 2rem 6rem', position: 'relative', zIndex: 6 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '3rem', alignItems: 'start' }}>
+      <div className="page-container" style={{ padding: '0 clamp(1rem, 4vw, 2rem) 6rem', position: 'relative', zIndex: 6 }}>
+        <div className="detail-grid">
 
           {/* ── LEFT COLUMN ── */}
-          <div style={{ marginTop: '-120px' }}>
+          <div className="overlap-poster-movie">
             {/* Poster */}
             <div style={{
               borderRadius: 'var(--radius-md)',
@@ -800,9 +800,9 @@ function LoadingState() {
   return (
     <div style={{ minHeight: '100vh', paddingTop: 'var(--navbar-height)' }}>
       <div style={{ height: 'clamp(400px, 65vh, 620px)', background: 'var(--color-bg-card)' }} className="skeleton" />
-      <div className="page-container" style={{ padding: '3rem 2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '3rem' }}>
-          <div style={{ marginTop: '-120px' }}>
+      <div className="page-container" style={{ padding: '3rem clamp(1rem, 4vw, 2rem)' }}>
+        <div className="detail-grid">
+          <div className="overlap-poster-movie">
             <div className="skeleton" style={{ aspectRatio: '2/3', borderRadius: 'var(--radius-md)' }} />
           </div>
           <div style={{ paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

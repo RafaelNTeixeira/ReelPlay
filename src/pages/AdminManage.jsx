@@ -107,7 +107,7 @@ export default function AdminManage() {
 
   return (
     <div style={{ paddingTop: 'var(--navbar-height)', paddingBottom: '5rem' }}>
-      <div className="page-container" style={{ padding: '2.5rem 2rem 0' }}>
+      <div className="page-container" style={{ padding: '2.5rem clamp(1rem, 4vw, 2rem) 0' }}>
         <div style={{ marginBottom: '1.75rem' }}>
           <span style={{ fontFamily: 'var(--font-label)', fontSize: '0.68rem', letterSpacing: '0.2em', color: 'var(--color-accent)' }}>
             ✦ ADMIN
@@ -231,7 +231,8 @@ export default function AdminManage() {
         ) : filtered.length === 0 ? (
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', padding: '2rem 0' }}>No reviews match this search/filter.</p>
         ) : (
-          <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+          <div className="admin-table-scroll">
+          <div className="admin-table-inner" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
             {/* Header row */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: '0.9rem', padding: '0.6rem 1rem',
@@ -296,6 +297,7 @@ export default function AdminManage() {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
       </div>

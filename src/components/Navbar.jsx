@@ -3,10 +3,18 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import SearchModal from './SearchModal';
 
+const NAV_LINKS = [
+  { label: 'All',     path: '/',            dot: null },
+  { label: 'Films',   path: '/?type=movie', dot: 'cinema' },
+  { label: 'Series',  path: '/?type=tv',    dot: 'cinema' },
+  { label: 'Games',   path: '/?type=game',  dot: 'game' },
+];
+
 export default function Navbar() {
   const { isAdmin, logout } = useAdmin();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -33,6 +41,23 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Close the mobile panel whenever the route changes
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
+
+  // Prevent background scroll while the mobile panel is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  const isLinkActive = (path) => {
+    const isActive = location.search === (path.includes('?') ? path.slice(path.indexOf('?')) : '') && location.pathname === '/';
+    const isExactHome = path === '/' && location.pathname === '/' && !location.search;
+    return path === '/' ? isExactHome : isActive;
+  };
+
   return (
     <>
       <nav style={{
@@ -40,11 +65,11 @@ export default function Navbar() {
         zIndex: 50,
         height: 'var(--navbar-height)',
         display: 'flex', alignItems: 'center',
-        padding: '0 2rem',
+        padding: '0 clamp(1rem, 4vw, 2rem)',
         transition: 'all 0.4s ease',
-        background: scrolled ? 'rgba(7, 7, 15, 0.97)' : 'linear-gradient(to bottom, rgba(7,7,15,0.92), transparent)',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--color-border)' : 'none',
+        background: scrolled || mobileOpen ? 'rgba(7, 7, 15, 0.97)' : 'linear-gradient(to bottom, rgba(7,7,15,0.92), transparent)',
+        backdropFilter: scrolled || mobileOpen ? 'blur(20px)' : 'none',
+        borderBottom: scrolled || mobileOpen ? '1px solid var(--color-border)' : 'none',
       }}>
 
         {/* Logo */}
@@ -53,14 +78,14 @@ export default function Navbar() {
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
             <span style={{
               fontFamily: 'var(--font-label)',
-              fontSize: '1.55rem',
+              fontSize: 'clamp(1.25rem, 4vw, 1.55rem)',
               letterSpacing: '0.22em',
               color: isGameRoute ? 'var(--color-game)' : 'var(--color-cinema)',
               transition: 'color 0.4s ease',
             }}>
               REELPLAY
             </span>
-            <span style={{
+            <span className="navbar-tagline" style={{
               fontFamily: 'var(--font-body)',
               fontSize: '0.6rem',
               letterSpacing: '0.18em',
@@ -73,17 +98,10 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Nav links */}
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '2.5rem' }}>
-          {[
-            { label: 'All',     path: '/',            dot: null },
-            { label: 'Films',   path: '/?type=movie', dot: 'cinema' },
-            { label: 'Series',  path: '/?type=tv',    dot: 'cinema' },
-            { label: 'Games',   path: '/?type=game',  dot: 'game' },
-          ].map(({ label, path, dot }) => {
-            const isActive = location.search === (path.includes('?') ? path.slice(path.indexOf('?')) : '') && location.pathname === '/';
-            const isExactHome = path === '/' && location.pathname === '/' && !location.search;
-            const active = path === '/' ? isExactHome : isActive;
+        {/* Nav links (desktop only) */}
+        <div className="navbar-links" style={{ flex: 1, justifyContent: 'center', gap: '2.5rem' }}>
+          {NAV_LINKS.map(({ label, path, dot }) => {
+            const active = isLinkActive(path);
             const accentColor = dot === 'game' ? 'var(--color-game)' : 'var(--color-cinema)';
             return (
               <Link key={label} to={path} style={{
@@ -116,8 +134,8 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {/* Actions (desktop only) */}
+        <div className="navbar-actions" style={{ alignItems: 'center', gap: '0.75rem' }}>
           <Link to="/stats" style={{
             background: 'transparent',
             border: '1px solid var(--color-border)',
@@ -196,7 +214,147 @@ export default function Navbar() {
             </Link>
           )}
         </div>
+
+        {/* Hamburger toggle (mobile only) */}
+        <button
+          className="navbar-hamburger"
+          onClick={() => setMobileOpen((o) => !o)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          style={{
+            marginLeft: 'auto',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+            background: 'transparent',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--color-text-primary)',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          {mobileOpen ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          )}
+        </button>
       </nav>
+
+      {/* Mobile slide-down panel */}
+      <div
+        className={`navbar-mobile-panel${mobileOpen ? ' open' : ''}`}
+        style={{
+          position: 'fixed',
+          top: 'var(--navbar-height)',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 49,
+          background: 'rgba(7, 7, 15, 0.98)',
+          backdropFilter: 'blur(20px)',
+          flexDirection: 'column',
+          padding: '1.5rem',
+          gap: '0.4rem',
+          overflowY: 'auto',
+          animation: mobileOpen ? 'fadeIn 0.2s ease' : 'none',
+        }}
+      >
+        {NAV_LINKS.map(({ label, path, dot }) => {
+          const active = isLinkActive(path);
+          const accentColor = dot === 'game' ? 'var(--color-game)' : 'var(--color-cinema)';
+          return (
+            <Link key={label} to={path} style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: active ? accentColor : 'var(--color-text-primary)',
+              textDecoration: 'none',
+              padding: '0.9rem 0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              borderBottom: '1px solid var(--color-border)',
+            }}>
+              {dot && (
+                <span style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: dot === 'game' ? 'var(--color-game)' : 'var(--color-cinema)',
+                  display: 'inline-block', flexShrink: 0,
+                  opacity: active ? 1 : 0.35,
+                }} />
+              )}
+              {label}
+            </Link>
+          );
+        })}
+
+        <Link to="/stats" style={{
+          fontFamily: 'var(--font-body)', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.08em',
+          textTransform: 'uppercase', color: 'var(--color-text-primary)', textDecoration: 'none',
+          padding: '0.9rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem',
+          borderBottom: '1px solid var(--color-border)',
+        }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          Stats
+        </Link>
+        <Link to="/watchlist" style={{
+          fontFamily: 'var(--font-body)', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.08em',
+          textTransform: 'uppercase', color: 'var(--color-text-primary)', textDecoration: 'none',
+          padding: '0.9rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem',
+          borderBottom: '1px solid var(--color-border)',
+        }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Watchlist
+        </Link>
+        <button
+          onClick={() => { setMobileOpen(false); setSearchOpen(true); }}
+          style={{
+            fontFamily: 'var(--font-body)', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'var(--color-text-primary)', background: 'transparent', border: 'none',
+            padding: '0.9rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem',
+            borderBottom: '1px solid var(--color-border)', textAlign: 'left', cursor: 'pointer',
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search
+        </button>
+
+        {isAdmin ? (
+          <>
+            <Link to="/admin/manage" style={{
+              fontFamily: 'var(--font-body)', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.08em',
+              textTransform: 'uppercase', color: 'var(--color-accent)', textDecoration: 'none',
+              padding: '0.9rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem',
+              borderBottom: '1px solid var(--color-border)',
+            }}>
+              ⚙ Manage
+            </Link>
+            <button
+              onClick={() => { logout(); setMobileOpen(false); navigate('/'); }}
+              style={{
+                fontFamily: 'var(--font-body)', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: '#e05555', background: 'transparent', border: 'none',
+                padding: '0.9rem 0.5rem', textAlign: 'left', cursor: 'pointer',
+              }}
+            >
+              Sign Out
+            </button>
+          </>
+        ) : (
+          <Link to="/admin" style={{
+            fontFamily: 'var(--font-body)', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'var(--color-text-muted)', textDecoration: 'none',
+            padding: '0.9rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem',
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Admin Login
+          </Link>
+        )}
+      </div>
 
       <SearchModal
         isOpen={searchOpen}

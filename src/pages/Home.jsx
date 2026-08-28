@@ -126,7 +126,7 @@ export default function Home() {
       {/* -- Stats bar -- */}
       {!loading && stats.total > 0 && (
         <div style={{ background: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)' }}>
-          <div className="page-container" style={{ padding: '1.1rem 2rem' }}>
+          <div className="page-container" style={{ padding: '1.1rem clamp(1rem, 4vw, 2rem)' }}>
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
               {[
                 { label: 'Reviews',     value: stats.total,       accent: 'var(--color-text-primary)' },
@@ -148,7 +148,7 @@ export default function Home() {
       )}
 
       {/* -- Grid -- */}
-      <div className="page-container" style={{ padding: '3rem 2rem 5rem' }}>
+      <div className="page-container" style={{ padding: '3rem clamp(1rem, 4vw, 2rem) 5rem' }}>
 
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.1rem' }}>
@@ -349,9 +349,9 @@ function FeaturedHero({ review }) {
       {/* Accent tint for games */}
       {isGame && <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 50%, rgba(129,140,248,0.06) 0%, transparent 60%)' }} />}
 
-      <div className="page-container" style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center', gap: '2rem' }}>
+      <div className="page-container" style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 4vw, 2rem)' }}>
         {poster && (
-          <div style={{ flexShrink: 0, width: '115px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', boxShadow: `0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px ${accentDim}`, animation: 'fadeInUp 0.6s ease' }}>
+          <div style={{ flexShrink: 0, width: 'clamp(72px, 22vw, 115px)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', boxShadow: `0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px ${accentDim}`, animation: 'fadeInUp 0.6s ease' }}>
             <img src={poster} alt={review.title} style={{ width: '100%', display: 'block', objectFit: 'cover', aspectRatio: isGame ? '16/9' : '2/3' }} />
           </div>
         )}
